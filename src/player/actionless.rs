@@ -1,4 +1,4 @@
-use super::{Action, ArsenalItem, CanChoose, Choose, DraineelessPlayer};
+use super::{Action, ArsenalItem, CanChoose, Choose, DraineelessPlayer, FinishedPlayer};
 use crate::boosters::Booster;
 use crate::characters::Character;
 use crate::game::GameConfig;
@@ -20,6 +20,10 @@ impl ActionlessPlayer {
         self.points += points;
     }
 
+    pub(crate) fn needs_points_to_win(&self) -> bool {
+        self.points < self.game_config.max_points
+    }
+
     pub fn into_draineeless(mut self) -> Result<DraineelessPlayer, ()> {
         if let Some(action) = self.pending_action {
             let arsenal_item = action.into_arsenal_item();
@@ -37,6 +41,17 @@ impl ActionlessPlayer {
             })
         } else {
             Err(())
+        }
+    }
+
+    pub fn into_finished(self) -> FinishedPlayer {
+        FinishedPlayer {
+            game_config: self.game_config,
+            points: self.points,
+            character: self.character,
+            booster: self.booster,
+            arsenal: self.arsenal,
+            queue: self.queue,
         }
     }
 }

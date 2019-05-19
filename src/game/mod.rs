@@ -9,7 +9,7 @@ use crate::{
         },
         Phase, PhaseComplete, PhaseCompleteRef,
     },
-    player::{Action, ArsenalItem, CharacterlessPlayer, Choose, ChooseRef},
+    player::{Action, ArsenalItem, CharacterlessPlayer, Choose, ChooseRef, FinishedPlayer},
 };
 use std::mem;
 
@@ -248,16 +248,26 @@ impl Game {
                             }
                         }
 
-                        let dummy = vec![];
-                        let players = mem::replace(players, dummy);
-                        self.phase = Phase::DrainedMove(
-                            players
-                                .into_iter()
-                                .map(|p| p.into_draineeless().unwrap())
-                                .collect(),
-                        );
+                        if players.iter().all(|p| p.needs_points_to_win()) {
+                            let dummy = vec![];
+                            let players = mem::replace(players, dummy);
+                            self.phase = Phase::DrainedMove(
+                                players
+                                    .into_iter()
+                                    .map(|p| p.into_draineeless().unwrap())
+                                    .collect(),
+                            );
+                            ActionPhaseOutcome::Done(action_points)
+                        } else {
+                            // TODO Handle multiple players having the needed points to win
+                            let dummy = vec![];
+                            let players = mem::replace(players, dummy);
+                            let finished_players: Vec<FinishedPlayer> =
+                                players.into_iter().map(|p| p.into_finished()).collect();
+                            self.phase = Phase::Final(finished_players.clone());
 
-                        ActionPhaseOutcome::Done(action_points)
+                            ActionPhaseOutcome::GameOver(finished_players)
+                        }
                     } else {
                         ActionPhaseOutcome::Pending
                     }),
@@ -267,6 +277,15 @@ impl Game {
             }
         } else {
             Err(())
+        }
+    }
+
+    pub fn winner_index(&self) -> Option<usize> {
+        match &self.phase {
+            Phase::Final(players) => players
+                .iter()
+                .position(|p| p.points() >= self.config.max_points),
+            _ => None,
         }
     }
 }

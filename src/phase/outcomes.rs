@@ -1,7 +1,7 @@
 use crate::{
     boosters::Booster,
     characters::Character,
-    player::{Action, ArsenalItem},
+    player::{Action, ArsenalItem,FinishedPlayer},
 };
 
 #[derive(Debug, Clone)]
@@ -26,6 +26,7 @@ pub enum DraineePhaseOutcome {
 #[derive(Debug, Clone)]
 pub enum ActionPhaseOutcome {
     Done(Vec<ActionPoints>),
+    GameOver(Vec<FinishedPlayer>),
     Pending,
 }
 

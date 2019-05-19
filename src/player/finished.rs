@@ -6,12 +6,12 @@ use crate::queue::Queue;
 
 #[derive(Debug, Clone)]
 pub struct FinishedPlayer {
-    game_config: GameConfig,
-    points: u8,
-    character: Character,
-    booster: Booster,
-    arsenal: Vec<ArsenalItem>,
-    queue: Queue,
+    pub(super) game_config: GameConfig,
+    pub(super) points: u8,
+    pub(super) character: Character,
+    pub(super) booster: Booster,
+    pub(super) arsenal: Vec<ArsenalItem>,
+    pub(super) queue: Queue,
 }
 
 impl FinishedPlayer {
@@ -19,7 +19,7 @@ impl FinishedPlayer {
         &self.game_config
     }
 
-    pub fn point(&self) -> u8 {
+    pub fn points(&self) -> u8 {
         self.points
     }
 
