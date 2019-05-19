@@ -1,8 +1,8 @@
 use super::{draineeless::DraineelessPlayer, ArsenalItem, CanChoose, Choose};
 use crate::boosters::Booster;
 use crate::characters::Character;
+use crate::game::GameConfig;
 use crate::queue::Queue;
-use crate::GameConfig;
 
 #[derive(Debug, Clone)]
 pub struct BoosterlessPlayer {

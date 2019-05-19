@@ -1,6 +1,6 @@
 use super::{boosterless::BoosterlessPlayer, CanChoose, Choose};
 use crate::characters::{Character, CharacterChoices, CharacterStreak};
-use crate::GameConfig;
+use crate::game::GameConfig;
 
 #[derive(Debug, Clone)]
 pub struct CharacterlessPlayer {
