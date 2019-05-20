@@ -99,8 +99,8 @@ impl Choose<Action> for ActionlessPlayer {
         }
     }
 
-    fn choice(&self) -> Option<&Action> {
-        self.pending_action.as_ref()
+    fn choice(&self) -> Option<Action> {
+        self.pending_action
     }
 }
 
@@ -108,10 +108,13 @@ impl Choose<Action> for ActionlessPlayer {
 mod tests {
     use super::*;
     use crate::player::CharacterlessPlayer;
+    use crate::queue::DequeueChoice;
 
     fn actionless_shadow() -> ActionlessPlayer {
         let mut shadow = draineeless_shadow();
-        shadow.choose(Some(ArsenalItem::Mirror)).unwrap();
+        shadow
+            .choose(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
         shadow.into_actionless().unwrap()
     }
 

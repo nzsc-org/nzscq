@@ -24,15 +24,16 @@ impl Queue {
         self.entrance = entering;
     }
 
-    pub fn dequeue(&mut self, drainee: Option<&ArsenalItem>) -> Result<Option<ArsenalItem>, ()> {
-        match drainee {
-            None => Ok(self.exit.take()),
-            Some(drainee) => self.drain(drainee),
+    pub fn dequeue(&mut self, choice: DequeueChoice) -> Result<Option<ArsenalItem>, ()> {
+        match choice {
+            DequeueChoice::Decline => Ok(None),
+            DequeueChoice::JustExit => Ok(self.exit.take()),
+            DequeueChoice::DrainAndExit(drainee) => self.drain(drainee),
         }
     }
 
-    fn drain(&mut self, drainee: &ArsenalItem) -> Result<Option<ArsenalItem>, ()> {
-        let position = self.pool.iter().position(|m| m == drainee);
+    fn drain(&mut self, drainee: ArsenalItem) -> Result<Option<ArsenalItem>, ()> {
+        let position = self.pool.iter().position(|m| m == &drainee);
         match position {
             None => Err(()),
             Some(position) => {
@@ -54,6 +55,13 @@ impl Queue {
             Some(_) => false,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DequeueChoice {
+    DrainAndExit(ArsenalItem),
+    JustExit,
+    Decline,
 }
 
 #[cfg(test)]
@@ -97,7 +105,9 @@ mod tests {
             pool: vec![ArsenalItem::Mirror],
             exit: Some(ArsenalItem::Move(Move::Nunchucks)),
         };
-        let returned = queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        let returned = queue
+            .dequeue(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
         assert_eq!(returned, Some(ArsenalItem::Move(Move::Nunchucks)));
     }
 
@@ -108,7 +118,9 @@ mod tests {
             pool: vec![ArsenalItem::Mirror],
             exit: Some(ArsenalItem::Move(Move::Nunchucks)),
         };
-        queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        queue
+            .dequeue(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
         assert_eq!(queue.exit, Some(ArsenalItem::Mirror));
         assert!(!queue.pool.contains(&ArsenalItem::Mirror));
     }
@@ -121,7 +133,7 @@ mod tests {
             exit: Some(ArsenalItem::Move(Move::Nunchucks)),
         };
         assert_eq!(
-            queue.dequeue(None),
+            queue.dequeue(DequeueChoice::JustExit),
             Ok(Some(ArsenalItem::Move(Move::Nunchucks)))
         );
         assert_eq!(queue.pool, vec![ArsenalItem::Mirror]);

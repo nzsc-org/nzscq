@@ -71,8 +71,8 @@ impl Choose<Character> for CharacterlessPlayer {
         }
     }
 
-    fn choice(&self) -> Option<&Character> {
-        self.pending_character.as_ref()
+    fn choice(&self) -> Option<Character> {
+        self.pending_character
     }
 }
 
@@ -109,7 +109,7 @@ mod tests {
         let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
         assert_eq!(player.choices(), Some(Character::all()));
         assert!(player.choose(Character::Ninja).is_ok());
-        assert_eq!(player.choice(), Some(&Character::Ninja));
+        assert_eq!(player.choice(), Some(Character::Ninja));
     }
 
     #[test]
@@ -133,7 +133,7 @@ mod tests {
         player.choose(Character::Ninja).unwrap();
         assert_eq!(player.choices(), None);
         assert!(player.choose(Character::Samurai).is_err());
-        assert_eq!(player.choice(), Some(&Character::Ninja));
+        assert_eq!(player.choice(), Some(Character::Ninja));
     }
 
     #[test]

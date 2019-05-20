@@ -59,8 +59,8 @@ impl Choose<Booster> for BoosterlessPlayer {
         }
     }
 
-    fn choice(&self) -> Option<&Booster> {
-        self.pending_booster.as_ref()
+    fn choice(&self) -> Option<Booster> {
+        self.pending_booster
     }
 }
 
@@ -86,7 +86,7 @@ mod tests {
         let mut player = ninja();
         assert_eq!(player.choices(), Some(Character::Ninja.boosters()));
         assert!(player.choose(Booster::Shadow).is_ok());
-        assert_eq!(player.choice(), Some(&Booster::Shadow));
+        assert_eq!(player.choice(), Some(Booster::Shadow));
     }
 
     #[test]
@@ -103,7 +103,7 @@ mod tests {
         player.choose(Booster::Shadow).unwrap();
         assert_eq!(player.choices(), None);
         assert!(player.choose(Booster::Speedy).is_err());
-        assert_eq!(player.choice(), Some(&Booster::Shadow));
+        assert_eq!(player.choice(), Some(Booster::Shadow));
     }
 
     #[test]

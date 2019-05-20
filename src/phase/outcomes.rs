@@ -1,7 +1,8 @@
 use crate::{
     boosters::Booster,
     characters::Character,
-    player::{Action, ArsenalItem,FinishedPlayer},
+    player::{Action, FinishedPlayer},
+    queue::DequeueChoice,
 };
 
 #[derive(Debug, Clone)]
@@ -19,7 +20,7 @@ pub enum BoosterPhaseOutcome {
 
 #[derive(Debug, Clone)]
 pub enum DraineePhaseOutcome {
-    Done(Vec<Option<ArsenalItem>>),
+    Done(Vec<DequeueChoice>),
     Pending,
 }
 

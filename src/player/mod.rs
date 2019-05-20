@@ -14,7 +14,7 @@ pub use finished::*;
 pub(crate) trait Choose<T> {
     fn choices(&self) -> Option<Vec<T>>;
     fn choose(&mut self, choice: T) -> Result<(), ()>;
-    fn choice(&self) -> Option<&T>;
+    fn choice(&self) -> Option<T>;
     fn has_chosen(&self) -> bool {
         if let Some(_) = self.choice() {
             true
@@ -48,7 +48,7 @@ where
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ArsenalItem {
     Mirror,
     Move(Move),
@@ -72,7 +72,7 @@ impl ArsenalItem {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Action {
     Mirror(Move),
     Move(Move),

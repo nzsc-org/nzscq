@@ -9,7 +9,8 @@ use crate::{
         },
         Phase, PhaseComplete,
     },
-    player::{Action, ArsenalItem, CharacterlessPlayer, Choose, FinishedPlayer},
+    player::{Action, CharacterlessPlayer, Choose, FinishedPlayer},
+    queue::DequeueChoice,
 };
 use std::mem;
 
@@ -76,7 +77,7 @@ impl Game {
             Phase::DrainedMove(players) => Choices::DrainedMove(
                 players
                     .iter()
-                    .map(|p| p.choices().map(|choices| choices.clone()))
+                    .map(|p| p.choices().map(|choices| choices))
                     .collect(),
             ),
 
@@ -101,10 +102,8 @@ impl Game {
                 match result {
                     Err(_) => Err(()),
                     Ok(_) => Ok(if players.complete() {
-                        let mut character_codes: Vec<u8> = players
-                            .iter()
-                            .map(|p| *(p.choice().unwrap()) as u8)
-                            .collect();
+                        let mut character_codes: Vec<u8> =
+                            players.iter().map(|p| p.choice().unwrap() as u8).collect();
                         if helpers::has_duplicates(&mut character_codes) {
                             for p in players {
                                 p.clear_choice().unwrap();
@@ -112,7 +111,7 @@ impl Game {
                             CharacterPhaseOutcome::Rechoose
                         } else {
                             let all_characters: Vec<Character> =
-                                players.iter().map(|p| *p.choice().unwrap()).collect();
+                                players.iter().map(|p| p.choice().unwrap()).collect();
                             let mut character_headstarts: Vec<CharacterHeadstart> = all_characters
                                 .iter()
                                 .map(|c| CharacterHeadstart(*c, 0))
@@ -164,7 +163,7 @@ impl Game {
                     Err(_) => Err(()),
                     Ok(_) => Ok(if players.complete() {
                         let boosters: Vec<Booster> =
-                            players.iter().map(|p| *p.choice().unwrap()).collect();
+                            players.iter().map(|p| p.choice().unwrap()).collect();
                         let dummy = vec![];
                         let players = mem::replace(players, dummy);
                         self.phase = Phase::DrainedMove(
@@ -190,7 +189,7 @@ impl Game {
     pub fn choose_drainee(
         &mut self,
         index: usize,
-        drainee: Option<ArsenalItem>,
+        drainee: DequeueChoice,
     ) -> Result<DraineePhaseOutcome, ()> {
         if let Phase::DrainedMove(players) = &mut self.phase {
             if index < players.len() {
@@ -200,7 +199,7 @@ impl Game {
                 match result {
                     Err(_) => Err(()),
                     Ok(_) => Ok(if players.complete() {
-                        let drained_moves: Vec<Option<ArsenalItem>> = players
+                        let dequeue_choices: Vec<DequeueChoice> = players
                             .iter()
                             .map(|p| p.choice().unwrap().clone())
                             .collect();
@@ -214,7 +213,7 @@ impl Game {
                                 .collect(),
                         );
 
-                        DraineePhaseOutcome::Done(drained_moves)
+                        DraineePhaseOutcome::Done(dequeue_choices)
                     } else {
                         DraineePhaseOutcome::Pending
                     }),
@@ -305,7 +304,7 @@ impl Game {
 pub enum Choices {
     Character(Vec<Option<Vec<Character>>>),
     Booster(Vec<Option<Vec<Booster>>>),
-    DrainedMove(Vec<Option<Vec<Option<ArsenalItem>>>>),
+    DrainedMove(Vec<Option<Vec<DequeueChoice>>>),
     Action(Vec<Option<Vec<Action>>>),
     None,
 }

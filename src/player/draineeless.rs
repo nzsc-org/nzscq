@@ -2,7 +2,7 @@ use super::{actionless::ActionlessPlayer, ArsenalItem, CanChoose, Choose};
 use crate::boosters::Booster;
 use crate::characters::Character;
 use crate::game::GameConfig;
-use crate::queue::Queue;
+use crate::queue::{DequeueChoice, Queue};
 
 #[derive(Debug, Clone)]
 pub struct DraineelessPlayer {
@@ -12,7 +12,7 @@ pub struct DraineelessPlayer {
     pub(super) booster: Booster,
     pub(super) arsenal: Vec<ArsenalItem>,
     pub(super) queue: Queue,
-    pub(super) choice: Option<Option<ArsenalItem>>,
+    pub(super) choice: Option<DequeueChoice>,
 }
 
 impl DraineelessPlayer {
@@ -37,27 +37,27 @@ impl DraineelessPlayer {
     }
 }
 
-impl Choose<Option<ArsenalItem>> for DraineelessPlayer {
-    fn choices(&self) -> Option<Vec<Option<ArsenalItem>>> {
+impl Choose<DequeueChoice> for DraineelessPlayer {
+    fn choices(&self) -> Option<Vec<DequeueChoice>> {
         if self.has_chosen() {
             None
         } else if self.can_dequeue() {
-            let mut items: Vec<Option<ArsenalItem>> = self
+            let mut items: Vec<DequeueChoice> = self
                 .queue
                 .pool()
                 .iter()
-                .map(|item| Some(item.clone()))
+                .map(|item| DequeueChoice::DrainAndExit(item.clone()))
                 .collect();
-            items.push(None);
+            items.push(DequeueChoice::Decline);
             Some(items)
         } else {
-            Some(vec![None])
+            Some(vec![DequeueChoice::Decline])
         }
     }
 
-    fn choose(&mut self, drainee: Option<ArsenalItem>) -> Result<(), ()> {
+    fn choose(&mut self, drainee: DequeueChoice) -> Result<(), ()> {
         if self.can_choose(&drainee) {
-            let exited = self.queue.dequeue(drainee.as_ref()).unwrap();
+            let exited = self.queue.dequeue(drainee).unwrap();
             if let Some(exited) = exited {
                 self.arsenal.push(exited);
             }
@@ -68,8 +68,8 @@ impl Choose<Option<ArsenalItem>> for DraineelessPlayer {
         }
     }
 
-    fn choice(&self) -> Option<&Option<ArsenalItem>> {
-        self.choice.as_ref()
+    fn choice(&self) -> Option<DequeueChoice> {
+        self.choice
     }
 }
 
@@ -90,39 +90,44 @@ mod tests {
     #[test]
     fn can_decline_opportunity_to_drain_if_pool_occupied() {
         let mut shadow = shadow();
-        assert!(shadow.choices().unwrap().contains(&None));
-        assert!(shadow.choose(None).is_ok());
-        assert_eq!(shadow.choice(), Some(&None));
+        assert!(shadow.choices().unwrap().contains(&DequeueChoice::Decline));
+        assert!(shadow.choose(DequeueChoice::Decline).is_ok());
+        assert_eq!(shadow.choice(), Some(DequeueChoice::Decline));
     }
 
     #[test]
     fn must_decline_opportunity_to_drain_if_pool_empty() {
         let mut shadow = shadow();
-        shadow.queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        shadow
+            .queue
+            .dequeue(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
         assert_eq!(0, shadow.queue.pool().len());
-        assert_eq!(Some(vec![None]), shadow.choices());
-        assert!(shadow.choose(None).is_ok());
-        assert_eq!(shadow.choice(), Some(&None));
+        assert_eq!(Some(vec![DequeueChoice::Decline]), shadow.choices());
+        assert!(shadow.choose(DequeueChoice::Decline).is_ok());
+        assert_eq!(shadow.choice(), Some(DequeueChoice::Decline));
     }
 
     #[test]
     fn can_choose_mirror_if_mirror_in_pool() {
         let mut shadow = shadow();
+        let drain_mirror = DequeueChoice::DrainAndExit(ArsenalItem::Mirror);
         assert_eq!(
-            Some(vec![Some(ArsenalItem::Mirror), None]),
+            Some(vec![drain_mirror, DequeueChoice::Decline]),
             shadow.choices()
         );
-        assert!(shadow.choose(Some(ArsenalItem::Mirror)).is_ok());
-        assert_eq!(Some(&Some(ArsenalItem::Mirror)), shadow.choice());
+        assert!(shadow.choose(drain_mirror).is_ok());
+        assert_eq!(Some(drain_mirror), shadow.choice());
     }
 
     #[test]
     fn cannot_choose_if_has_already_chosen() {
         let mut shadow = shadow();
-        shadow.choose(Some(ArsenalItem::Mirror)).unwrap();
+        let drain_mirror = DequeueChoice::DrainAndExit(ArsenalItem::Mirror);
+        shadow.choose(drain_mirror).unwrap();
         assert_eq!(None, shadow.choices());
-        assert!(shadow.choose(None).is_err());
-        assert_eq!(Some(&Some(ArsenalItem::Mirror)), shadow.choice());
+        assert!(shadow.choose(drain_mirror).is_err());
+        assert_eq!(Some(drain_mirror), shadow.choice());
     }
 
     #[test]
@@ -137,7 +142,10 @@ mod tests {
         use crate::moves::Move;
 
         let mut shadow = shadow();
-        shadow.queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        shadow
+            .queue
+            .dequeue(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
         assert!(!shadow.queue.exit_vacant());
         shadow.arsenal = vec![ArsenalItem::Move(Move::Nunchucks)];
         assert!(shadow.can_dequeue());
@@ -148,7 +156,10 @@ mod tests {
         use crate::moves::Move;
 
         let mut shadow = shadow();
-        shadow.queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        shadow
+            .queue
+            .dequeue(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
         assert!(!shadow.queue.exit_vacant());
         shadow.arsenal = vec![
             ArsenalItem::Move(Move::Nunchucks),
