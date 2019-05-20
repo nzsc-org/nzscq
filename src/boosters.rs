@@ -78,3 +78,40 @@ impl Display for Booster {
         write!(f, "{}", string)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_string_works() {
+        assert_eq!(Booster::Shadow.to_string(), "Shadow".to_string());
+    }
+
+    #[test]
+    fn from_str_works() {
+        assert_eq!(Booster::from_str("Shadow"), Ok(Booster::Shadow));
+    }
+
+    #[test]
+    fn atlas_replaces_nothing() {
+        use crate::characters::Character;
+
+        let original = Character::Samurai.moves();
+        let mut replaced = original.clone();
+        Booster::Atlas.replace_moves(&mut replaced);
+        assert_eq!(replaced, original);
+    }
+
+    #[test]
+    fn strong_replaces_smash_with_strong_smash() {
+        use crate::characters::Character;
+
+        let original = Character::Samurai.moves();
+        let mut replaced = original.clone();
+        Booster::Strong.replace_moves(&mut replaced);
+        assert_ne!(replaced, original);
+        assert!(!replaced.contains(&Move::Smash));
+        assert!(replaced.contains(&Move::StrongSmash));
+    }
+}

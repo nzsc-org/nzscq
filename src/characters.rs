@@ -43,7 +43,7 @@ impl Character {
     pub fn points_against(self, other: Character) -> u8 {
         let self_index = self as usize;
         let other_index = other as usize;
-        CHARACTER_HEADSTARTS[other_index * 29 + self_index]
+        CHARACTER_HEADSTARTS[other_index * 4 + self_index]
     }
 }
 
@@ -78,7 +78,7 @@ const CHARACTER_HEADSTARTS: [u8; 4 * 4] = [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0
 
 pub(crate) trait CharacterChoices {
     fn choices(&self, max_times: u8) -> Vec<Character>;
-    fn choose(&mut self, character: Character);
+    fn choose(&mut self, max_times: u8, character: Character) -> Result<(), ()>;
 }
 
 impl CharacterChoices for Option<CharacterStreak> {
@@ -96,25 +96,95 @@ impl CharacterChoices for Option<CharacterStreak> {
         }
     }
 
-    fn choose(&mut self, character: Character) {
-        if let Some(streak) = self {
-            if streak.character == character {
-                streak.times += 1;
-            } else {
-                streak.character = character;
-                streak.times = 1;
+    fn choose(&mut self, max_times: u8, character: Character) -> Result<(), ()> {
+        match self {
+            None => {
+                *self = Some(CharacterStreak {
+                    character,
+                    times: 1,
+                });
+                Ok(())
             }
-        } else {
-            *self = Some(CharacterStreak {
-                character,
-                times: 1,
-            });
+            Some(streak) => {
+                if streak.character == character {
+                    if streak.times < max_times {
+                        streak.times += 1;
+                        Ok(())
+                    } else {
+                        Err(())
+                    }
+                } else {
+                    streak.character = character;
+                    streak.times = 1;
+                    Ok(())
+                }
+            }
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct CharacterStreak {
     character: Character,
     times: u8,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_string_works() {
+        assert_eq!(Character::Ninja.to_string(), "Ninja".to_string());
+    }
+
+    #[test]
+    fn from_str_works() {
+        assert_eq!(Character::from_str("Ninja"), Ok(Character::Ninja));
+    }
+
+    #[test]
+    fn ninja_beats_samurai() {
+        assert_eq!(Character::Ninja.points_against(Character::Samurai), 1);
+        assert_eq!(Character::Samurai.points_against(Character::Ninja), 0);
+    }
+
+    #[test]
+    fn ninja_ties_zombie() {
+        assert_eq!(Character::Ninja.points_against(Character::Zombie), 0);
+        assert_eq!(Character::Zombie.points_against(Character::Ninja), 0);
+    }
+
+    #[test]
+    fn can_choose_any_if_no_streak() {
+        let mut streak: Option<CharacterStreak> = None;
+        assert_eq!(streak.choices(MAX_TIMES), Character::all());
+        assert!(streak.choose(MAX_TIMES, Character::Ninja).is_ok());
+    }
+
+    #[test]
+    fn can_choose_any_if_repetitions_less_than_max() {
+        let one_less_than_max = MAX_TIMES - 1;
+        let mut streak = Some(CharacterStreak {
+            character: Character::Ninja,
+            times: one_less_than_max,
+        });
+        assert_eq!(streak.choices(MAX_TIMES), Character::all());
+        assert!(streak.choose(MAX_TIMES, Character::Ninja).is_ok());
+    }
+
+    #[test]
+    fn cannot_choose_repeated_character_if_repetitions_equals_max() {
+        let one_less_than_max = MAX_TIMES;
+        let mut streak = Some(CharacterStreak {
+            character: Character::Ninja,
+            times: one_less_than_max,
+        });
+        let mut no_ninja = Character::all();
+        no_ninja.retain(|c| c != &Character::Ninja);
+        assert_eq!(streak.choices(MAX_TIMES), no_ninja);
+        assert!(streak.choose(MAX_TIMES, Character::Ninja).is_err());
+    }
+
+    const MAX_TIMES: u8 = 3;
 }

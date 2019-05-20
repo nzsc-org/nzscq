@@ -20,12 +20,23 @@ pub struct Game {
     phase: Phase,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GameConfig {
     pub player_count: u8,
     pub max_points: u8,
     pub max_character_repetitions: u8,
     pub max_arsenal_items: u8,
+}
+
+impl Default for GameConfig {
+    fn default() -> GameConfig {
+        GameConfig {
+            player_count: 2,
+            max_points: 5,
+            max_character_repetitions: 3,
+            max_arsenal_items: 2,
+        }
+    }
 }
 
 impl Game {
@@ -47,7 +58,7 @@ impl Game {
     fn initial_players(player_count: u8, config: &GameConfig) -> Vec<CharacterlessPlayer> {
         let mut players: Vec<CharacterlessPlayer> = vec![];
         for _ in 0..player_count {
-            players.push(CharacterlessPlayer::from_game(config.clone()))
+            players.push(CharacterlessPlayer::from_game_config(config.clone()))
         }
         players
     }
@@ -159,7 +170,7 @@ impl Game {
                         self.phase = Phase::DrainedMove(
                             players
                                 .into_iter()
-                                .map(|p| p.into_exiterless().unwrap())
+                                .map(|p| p.into_draineeless().unwrap())
                                 .collect(),
                         );
 

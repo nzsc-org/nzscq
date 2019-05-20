@@ -110,6 +110,7 @@ impl FromStr for Move {
             "samuraisword" => Ok(Move::SamuraiSword),
             "helmet" => Ok(Move::Helmet),
             "smash" => Ok(Move::Smash),
+            "strongsmash" => Ok(Move::StrongSmash),
             "lightning" => Ok(Move::Lightning),
             "earthquake" => Ok(Move::Earthquake),
             "twist" => Ok(Move::Twist),
@@ -159,3 +160,63 @@ const MOVE_OUTCOMES: [u8; 29 * 29] = [
 const SINGLE_USE_MOVES: [Move; 3] = [Move::Zap, Move::Regenerate, Move::AcidSpray];
 
 const DESTRUCTIVE_MOVES: [Move; 2] = [Move::Zap, Move::AcidSpray];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_string_works() {
+        assert_eq!(Move::Kick.to_string(), "Kick".to_string());
+    }
+
+    #[test]
+    fn from_str_works() {
+        assert_eq!(Move::from_str("kick"), Ok(Move::Kick));
+        assert_eq!(Move::from_str("strongsmash"), Ok(Move::StrongSmash));
+    }
+
+    #[test]
+    fn kick_loses_to_smash() {
+        assert_eq!(Move::Kick.points_against(Move::Smash), 0);
+        assert_eq!(Move::Smash.points_against(Move::Kick), 1);
+    }
+
+    #[test]
+    fn shadow_fireball_beats_smash() {
+        assert_eq!(Move::ShadowFireball.points_against(Move::Smash), 1);
+        assert_eq!(Move::Smash.points_against(Move::ShadowFireball), 0);
+    }
+
+    #[test]
+    fn kick_ties_mustach_mash() {
+        assert_eq!(Move::Kick.points_against(Move::MustacheMash), 0);
+        assert_eq!(Move::MustacheMash.points_against(Move::Kick), 0);
+    }
+
+    #[test]
+    fn nunchucks_specially_ties_samurai_sword() {
+        assert_eq!(Move::Nunchucks.points_against(Move::SamuraiSword), 1);
+        assert_eq!(Move::SamuraiSword.points_against(Move::Nunchucks), 1);
+    }
+
+    #[test]
+    fn regenerate_is_single_use() {
+        assert!(Move::Regenerate.is_single_use());
+    }
+
+    #[test]
+    fn zombie_corps_is_not_single_use() {
+        assert!(!Move::ZombieCorps.is_single_use());
+    }
+
+    #[test]
+    fn acid_spray_is_destructive() {
+        assert!(Move::AcidSpray.is_destructive());
+    }
+
+    #[test]
+    fn nose_is_not_destructive() {
+        assert!(!Move::Nose.is_destructive());
+    }
+}

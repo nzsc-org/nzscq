@@ -92,3 +92,78 @@ impl Choose<Action> for ActionlessPlayer {
         self.pending_action.as_ref()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::player::{CharacterlessPlayer, ChooseRef};
+
+    fn actionless_shadow() -> ActionlessPlayer {
+        let mut shadow = draineeless_shadow();
+        shadow.choose(ArsenalItem::Mirror).unwrap();
+        shadow.into_actionless().unwrap()
+    }
+
+    fn draineeless_shadow() -> DraineelessPlayer {
+        let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        player.choose(Character::Ninja).unwrap();
+        let mut ninja = player.into_boosterless().unwrap();
+        ninja.choose(Booster::Shadow).unwrap();
+        ninja.into_draineeless().unwrap()
+    }
+
+    #[test]
+    fn shadow_initally_has_five_choices() {
+        let shadow = actionless_shadow();
+        assert_eq!(5, shadow.choices().unwrap().len());
+    }
+
+    #[test]
+    fn add_points_works() {
+        let mut shadow = actionless_shadow();
+        shadow.add_points(3);
+        assert_eq!(shadow.points, 3);
+    }
+
+    #[test]
+    fn needs_points_to_win_if_points_less_than_max() {
+        let mut shadow = actionless_shadow();
+        let one_less = shadow.game_config.max_points - 1;
+        shadow.add_points(one_less);
+        assert!(shadow.needs_points_to_win());
+    }
+
+    #[test]
+    fn does_not_need_points_to_win_if_points_equals_max() {
+        let mut shadow = actionless_shadow();
+        shadow.add_points(shadow.game_config.max_points);
+        assert!(!shadow.needs_points_to_win());
+    }
+
+    #[test]
+    fn into_draineeless_works_if_player_has_chosen() {
+        use crate::moves::Move;
+
+        let mut shadow = actionless_shadow();
+        shadow.choose(Action::Move(Move::Kick)).unwrap();
+        assert!(shadow.into_draineeless().is_ok());
+    }
+
+    #[test]
+    fn into_draineeless_fails_if_player_has_not_chosen() {
+        let shadow = actionless_shadow();
+        assert!(shadow.into_draineeless().is_err());
+    }
+
+    #[test]
+    fn into_finished_works() {
+        let original = actionless_shadow();
+        let finished = original.clone().into_finished();
+        assert_eq!(original.game_config, finished.game_config);
+        assert_eq!(original.points, finished.points);
+        assert_eq!(original.character, finished.character);
+        assert_eq!(original.booster, finished.booster);
+        assert_eq!(original.arsenal, finished.arsenal);
+    }
+
+}
