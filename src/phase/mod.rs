@@ -1,7 +1,7 @@
 pub mod outcomes;
 
 use crate::player::{
-    ActionlessPlayer, BoosterlessPlayer, CharacterlessPlayer, Choose, ChooseRef, DraineelessPlayer,
+    ActionlessPlayer, BoosterlessPlayer, CharacterlessPlayer, Choose, DraineelessPlayer,
     FinishedPlayer,
 };
 
@@ -21,19 +21,6 @@ pub(crate) trait PhaseComplete<C> {
 impl<P, C> PhaseComplete<C> for Vec<P>
 where
     P: Choose<C>,
-{
-    fn complete(&self) -> bool {
-        self.iter().all(|p| p.has_chosen())
-    }
-}
-
-pub(crate) trait PhaseCompleteRef<C> {
-    fn complete(&self) -> bool;
-}
-
-impl<P, C> PhaseCompleteRef<C> for Vec<P>
-where
-    P: ChooseRef<C>,
 {
     fn complete(&self) -> bool {
         self.iter().all(|p| p.has_chosen())

@@ -30,25 +30,6 @@ pub(crate) trait Choose<T> {
     }
 }
 
-pub(crate) trait ChooseRef<T> {
-    fn choices(&self) -> Option<&Vec<T>>;
-    fn choose(&mut self, choice: T) -> Result<(), ()>;
-    fn choice(&self) -> Option<&T>;
-    fn has_chosen(&self) -> bool {
-        if let Some(_) = self.choice() {
-            true
-        } else {
-            false
-        }
-    }
-    fn has_chosen_if_possible(&self) -> bool {
-        match self.choices() {
-            None => true,
-            Some(_) => self.has_chosen(),
-        }
-    }
-}
-
 trait CanChoose<T> {
     fn can_choose(&self, choice: &T) -> bool;
 }
@@ -56,24 +37,6 @@ trait CanChoose<T> {
 impl<T, C> CanChoose<C> for T
 where
     T: Choose<C>,
-    C: PartialEq,
-{
-    fn can_choose(&self, choice: &C) -> bool {
-        if let Some(choices) = self.choices() {
-            choices.contains(&choice) && !self.has_chosen()
-        } else {
-            false
-        }
-    }
-}
-
-trait CanChooseRef<T> {
-    fn can_choose(&self, choice: &T) -> bool;
-}
-
-impl<T, C> CanChooseRef<C> for T
-where
-    T: ChooseRef<C>,
     C: PartialEq,
 {
     fn can_choose(&self, choice: &C) -> bool {
