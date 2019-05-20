@@ -48,6 +48,7 @@ impl Choose<DequeueChoice> for DraineelessPlayer {
                 .iter()
                 .map(|item| DequeueChoice::DrainAndExit(item.clone()))
                 .collect();
+            items.push(DequeueChoice::JustExit);
             items.push(DequeueChoice::Decline);
             Some(items)
         } else {
@@ -113,11 +114,28 @@ mod tests {
         let mut shadow = shadow();
         let drain_mirror = DequeueChoice::DrainAndExit(ArsenalItem::Mirror);
         assert_eq!(
-            Some(vec![drain_mirror, DequeueChoice::Decline]),
+            Some(vec![
+                drain_mirror,
+                DequeueChoice::JustExit,
+                DequeueChoice::Decline
+            ]),
             shadow.choices()
         );
         assert!(shadow.choose(drain_mirror).is_ok());
         assert_eq!(Some(drain_mirror), shadow.choice());
+    }
+
+    #[test]
+    fn must_exit_without_draining_or_decline_if_pool_is_empty() {
+        let mut shadow = shadow();
+        let drain_mirror = DequeueChoice::DrainAndExit(ArsenalItem::Mirror);
+        shadow.queue.dequeue(drain_mirror).unwrap();
+        shadow.arsenal = vec![];
+        assert!(shadow.can_dequeue());
+        assert_eq!(
+            Some(vec![DequeueChoice::JustExit, DequeueChoice::Decline]),
+            shadow.choices()
+        );
     }
 
     #[test]
