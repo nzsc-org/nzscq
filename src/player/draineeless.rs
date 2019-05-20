@@ -72,3 +72,88 @@ impl Choose<Option<ArsenalItem>> for DraineelessPlayer {
         self.choice.as_ref()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn shadow() -> DraineelessPlayer {
+        use crate::player::{CharacterlessPlayer, Choose};
+
+        let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        player.choose(Character::Ninja).unwrap();
+        let mut ninja = player.into_boosterless().unwrap();
+        ninja.choose(Booster::Shadow).unwrap();
+        ninja.into_draineeless().unwrap()
+    }
+
+    #[test]
+    fn can_decline_opportunity_to_drain_if_pool_occupied() {
+        let mut shadow = shadow();
+        assert!(shadow.choices().unwrap().contains(&None));
+        assert!(shadow.choose(None).is_ok());
+        assert_eq!(shadow.choice(), Some(&None));
+    }
+
+    #[test]
+    fn must_decline_opportunity_to_drain_if_pool_empty() {
+        let mut shadow = shadow();
+        shadow.queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        assert_eq!(0, shadow.queue.pool().len());
+        assert_eq!(Some(vec![None]), shadow.choices());
+        assert!(shadow.choose(None).is_ok());
+        assert_eq!(shadow.choice(), Some(&None));
+    }
+
+    #[test]
+    fn can_choose_mirror_if_mirror_in_pool() {
+        let mut shadow = shadow();
+        assert_eq!(
+            Some(vec![Some(ArsenalItem::Mirror), None]),
+            shadow.choices()
+        );
+        assert!(shadow.choose(Some(ArsenalItem::Mirror)).is_ok());
+        assert_eq!(Some(&Some(ArsenalItem::Mirror)), shadow.choice());
+    }
+
+    #[test]
+    fn cannot_choose_if_has_already_chosen() {
+        let mut shadow = shadow();
+        shadow.choose(Some(ArsenalItem::Mirror)).unwrap();
+        assert_eq!(None, shadow.choices());
+        assert!(shadow.choose(None).is_err());
+        assert_eq!(Some(&Some(ArsenalItem::Mirror)), shadow.choice());
+    }
+
+    #[test]
+    fn can_dequeue_if_queue_exit_empty() {
+        let shadow = shadow();
+        assert!(shadow.arsenal.len() >= shadow.game_config.max_arsenal_items as usize);
+        assert!(shadow.can_dequeue());
+    }
+
+    #[test]
+    fn can_dequeue_if_arsenal_has_extra_capacity() {
+        use crate::moves::Move;
+
+        let mut shadow = shadow();
+        shadow.queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        assert!(!shadow.queue.exit_vacant());
+        shadow.arsenal = vec![ArsenalItem::Move(Move::Nunchucks)];
+        assert!(shadow.can_dequeue());
+    }
+
+    #[test]
+    fn cannot_dequeue_if_queue_exit_occupied_and_arsenal_has_no_capacity() {
+        use crate::moves::Move;
+
+        let mut shadow = shadow();
+        shadow.queue.dequeue(Some(&ArsenalItem::Mirror)).unwrap();
+        assert!(!shadow.queue.exit_vacant());
+        shadow.arsenal = vec![
+            ArsenalItem::Move(Move::Nunchucks),
+            ArsenalItem::Move(Move::ShadowFireball),
+        ];
+        assert!(!shadow.can_dequeue());
+    }
+}
