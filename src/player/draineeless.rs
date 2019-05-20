@@ -1,4 +1,4 @@
-use super::{actionless::ActionlessPlayer, ArsenalItem, CanChooseRef, ChooseRef};
+use super::{actionless::ActionlessPlayer, ArsenalItem, CanChoose, Choose};
 use crate::boosters::Booster;
 use crate::characters::Character;
 use crate::game::GameConfig;
@@ -12,7 +12,7 @@ pub struct DraineelessPlayer {
     pub(super) booster: Booster,
     pub(super) arsenal: Vec<ArsenalItem>,
     pub(super) queue: Queue,
-    pub(super) choice: Option<ArsenalItem>,
+    pub(super) choice: Option<Option<ArsenalItem>>,
 }
 
 impl DraineelessPlayer {
@@ -37,18 +37,27 @@ impl DraineelessPlayer {
     }
 }
 
-impl ChooseRef<ArsenalItem> for DraineelessPlayer {
-    fn choices(&self) -> Option<&Vec<ArsenalItem>> {
-        if self.has_chosen() || self.queue.pool().is_empty() || !self.can_dequeue() {
+impl Choose<Option<ArsenalItem>> for DraineelessPlayer {
+    fn choices(&self) -> Option<Vec<Option<ArsenalItem>>> {
+        if self.has_chosen() {
             None
+        } else if self.can_dequeue() {
+            let mut items: Vec<Option<ArsenalItem>> = self
+                .queue
+                .pool()
+                .iter()
+                .map(|item| Some(item.clone()))
+                .collect();
+            items.push(None);
+            Some(items)
         } else {
-            Some(self.queue.pool())
+            Some(vec![None])
         }
     }
 
-    fn choose(&mut self, drainee: ArsenalItem) -> Result<(), ()> {
+    fn choose(&mut self, drainee: Option<ArsenalItem>) -> Result<(), ()> {
         if self.can_choose(&drainee) {
-            let exited = self.queue.dequeue(&drainee);
+            let exited = self.queue.dequeue(drainee.as_ref()).unwrap();
             if let Some(exited) = exited {
                 self.arsenal.push(exited);
             }
@@ -59,7 +68,7 @@ impl ChooseRef<ArsenalItem> for DraineelessPlayer {
         }
     }
 
-    fn choice(&self) -> Option<&ArsenalItem> {
+    fn choice(&self) -> Option<&Option<ArsenalItem>> {
         self.choice.as_ref()
     }
 }

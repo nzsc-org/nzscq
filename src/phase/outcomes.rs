@@ -19,7 +19,7 @@ pub enum BoosterPhaseOutcome {
 
 #[derive(Debug, Clone)]
 pub enum DraineePhaseOutcome {
-    Done(Vec<ArsenalItem>),
+    Done(Vec<Option<ArsenalItem>>),
     Pending,
 }
 

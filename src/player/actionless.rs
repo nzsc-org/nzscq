@@ -26,8 +26,10 @@ impl ActionlessPlayer {
 
     pub fn into_draineeless(mut self) -> Result<DraineelessPlayer, ()> {
         if let Some(action) = self.pending_action {
-            let arsenal_item = action.into_arsenal_item();
-            self.arsenal.retain(|m| m != &arsenal_item);
+            let arsenal_item = action.into_opt_arsenal_item();
+            if let Some(arsenal_item) = &arsenal_item {
+                self.arsenal.retain(|m| m != arsenal_item);
+            }
             self.queue.enqueue(arsenal_item);
 
             Ok(DraineelessPlayer {
@@ -63,16 +65,25 @@ impl Choose<Action> for ActionlessPlayer {
         } else {
             let has_mirror = self.arsenal.contains(&ArsenalItem::Mirror);
             let mut actions: Vec<Action> = vec![];
-            for item in &self.arsenal {
-                match item {
-                    ArsenalItem::Mirror => {}
-                    ArsenalItem::Move(m) => {
-                        actions.push(Action::Move(*m));
-                        if has_mirror {
-                            actions.push(Action::Mirror(*m));
-                        }
-                    }
-                }
+            let mut move_actions: Vec<Action> = self
+                .arsenal
+                .iter()
+                .filter(|item| item != &&ArsenalItem::Mirror)
+                .map(|item| item.as_move_action().unwrap())
+                .collect();
+            actions.append(&mut move_actions);
+            if has_mirror {
+                let mut mirror_actions: Vec<Action> = self
+                    .queue
+                    .pool()
+                    .clone()
+                    .into_iter()
+                    .map(|item| item.as_mirror_action().unwrap())
+                    .collect();
+                actions.append(&mut mirror_actions);
+            }
+            if actions.len() == 0 {
+                actions.push(Action::Concede);
             }
 
             Some(actions)
@@ -96,11 +107,11 @@ impl Choose<Action> for ActionlessPlayer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::player::{CharacterlessPlayer, ChooseRef};
+    use crate::player::CharacterlessPlayer;
 
     fn actionless_shadow() -> ActionlessPlayer {
         let mut shadow = draineeless_shadow();
-        shadow.choose(ArsenalItem::Mirror).unwrap();
+        shadow.choose(Some(ArsenalItem::Mirror)).unwrap();
         shadow.into_actionless().unwrap()
     }
 

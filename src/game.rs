@@ -7,9 +7,9 @@ use crate::{
             ActionPhaseOutcome, ActionPoints, BoosterPhaseOutcome, CharacterHeadstart,
             CharacterPhaseOutcome, DraineePhaseOutcome,
         },
-        Phase, PhaseComplete, PhaseCompleteRef,
+        Phase, PhaseComplete,
     },
-    player::{Action, ArsenalItem, CharacterlessPlayer, Choose, ChooseRef, FinishedPlayer},
+    player::{Action, ArsenalItem, CharacterlessPlayer, Choose, FinishedPlayer},
 };
 use std::mem;
 
@@ -190,7 +190,7 @@ impl Game {
     pub fn choose_drainee(
         &mut self,
         index: usize,
-        drainee: ArsenalItem,
+        drainee: Option<ArsenalItem>,
     ) -> Result<DraineePhaseOutcome, ()> {
         if let Phase::DrainedMove(players) = &mut self.phase {
             if index < players.len() {
@@ -200,7 +200,7 @@ impl Game {
                 match result {
                     Err(_) => Err(()),
                     Ok(_) => Ok(if players.complete() {
-                        let drained_moves: Vec<ArsenalItem> = players
+                        let drained_moves: Vec<Option<ArsenalItem>> = players
                             .iter()
                             .map(|p| p.choice().unwrap().clone())
                             .collect();
@@ -305,7 +305,7 @@ impl Game {
 pub enum Choices {
     Character(Vec<Option<Vec<Character>>>),
     Booster(Vec<Option<Vec<Booster>>>),
-    DrainedMove(Vec<Option<Vec<ArsenalItem>>>),
+    DrainedMove(Vec<Option<Vec<Option<ArsenalItem>>>>),
     Action(Vec<Option<Vec<Action>>>),
     None,
 }
