@@ -308,7 +308,7 @@ pub enum Choices {
 }
 
 #[derive(Debug, Clone)]
-pub enum Phase {
+enum Phase {
     Character(Vec<CharacterlessPlayer>),
     Booster(Vec<BoosterlessPlayer>),
     DrainedMove(Vec<DraineelessPlayer>),
