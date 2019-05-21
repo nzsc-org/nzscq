@@ -1,8 +1,7 @@
-use super::{draineeless::DraineelessPlayer, ArsenalItem, CanChoose, Choose};
-use crate::boosters::Booster;
-use crate::characters::Character;
+use super::draineeless::DraineelessPlayer;
+use crate::choices::{ArsenalItem, Booster, CanChoose, Character, Choose};
+use crate::counters::Queue;
 use crate::game::GameConfig;
-use crate::queue::Queue;
 
 #[derive(Debug, Clone)]
 pub struct BoosterlessPlayer {
@@ -108,7 +107,7 @@ mod tests {
 
     #[test]
     fn shadow_initial_arsenal_is_correct() {
-        use crate::moves::Move;
+        use crate::choices::Move;
 
         let player = ninja();
         let arsenal = player.initial_arsenal(Booster::Shadow);
@@ -126,7 +125,7 @@ mod tests {
 
     #[test]
     fn atlas_initial_arsenal_is_correct() {
-        use crate::moves::Move;
+        use crate::choices::Move;
 
         let player = samurai();
         let arsenal = player.initial_arsenal(Booster::Atlas);
@@ -144,7 +143,7 @@ mod tests {
 
     #[test]
     fn strong_initial_arsenal_is_correct() {
-        use crate::moves::Move;
+        use crate::choices::Move;
 
         let player = samurai();
         let arsenal = player.initial_arsenal(Booster::Strong);

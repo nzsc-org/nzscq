@@ -1,8 +1,7 @@
-use super::{Action, ArsenalItem, CanChoose, Choose, DraineelessPlayer, FinishedPlayer};
-use crate::boosters::Booster;
-use crate::characters::Character;
+use super::{DraineelessPlayer, FinishedPlayer};
+use crate::choices::{Action, ArsenalItem, Booster, CanChoose, Character, Choose};
+use crate::counters::Queue;
 use crate::game::GameConfig;
-use crate::queue::Queue;
 
 #[derive(Debug, Clone)]
 pub struct ActionlessPlayer {
@@ -107,8 +106,8 @@ impl Choose<Action> for ActionlessPlayer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::choices::DequeueChoice;
     use crate::player::CharacterlessPlayer;
-    use crate::queue::DequeueChoice;
 
     fn actionless_shadow() -> ActionlessPlayer {
         let mut shadow = draineeless_shadow();
@@ -156,7 +155,7 @@ mod tests {
 
     #[test]
     fn into_draineeless_works_if_player_has_chosen() {
-        use crate::moves::Move;
+        use crate::choices::Move;
 
         let mut shadow = actionless_shadow();
         shadow.choose(Action::Move(Move::Kick)).unwrap();

@@ -1,8 +1,7 @@
-use super::{actionless::ActionlessPlayer, ArsenalItem, CanChoose, Choose};
-use crate::boosters::Booster;
-use crate::characters::Character;
+use super::ActionlessPlayer;
+use crate::choices::{ArsenalItem, Booster, CanChoose, Character, Choose, DequeueChoice};
+use crate::counters::Queue;
 use crate::game::GameConfig;
-use crate::queue::{DequeueChoice, Queue};
 
 #[derive(Debug, Clone)]
 pub struct DraineelessPlayer {
@@ -79,7 +78,7 @@ mod tests {
     use super::*;
 
     fn shadow() -> DraineelessPlayer {
-        use crate::player::{CharacterlessPlayer, Choose};
+        use crate::player::CharacterlessPlayer;
 
         let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
         player.choose(Character::Ninja).unwrap();
@@ -157,7 +156,7 @@ mod tests {
 
     #[test]
     fn can_dequeue_if_arsenal_has_extra_capacity() {
-        use crate::moves::Move;
+        use crate::choices::Move;
 
         let mut shadow = shadow();
         shadow
@@ -171,7 +170,7 @@ mod tests {
 
     #[test]
     fn cannot_dequeue_if_queue_exit_occupied_and_arsenal_has_no_capacity() {
-        use crate::moves::Move;
+        use crate::choices::Move;
 
         let mut shadow = shadow();
         shadow

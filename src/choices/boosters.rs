@@ -1,5 +1,6 @@
-use super::helpers;
-use super::moves::Move;
+use super::Move;
+use crate::helpers;
+
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
@@ -95,7 +96,7 @@ mod tests {
 
     #[test]
     fn atlas_replaces_nothing() {
-        use crate::characters::Character;
+        use crate::choices::Character;
 
         let original = Character::Samurai.moves();
         let mut replaced = original.clone();
@@ -105,7 +106,7 @@ mod tests {
 
     #[test]
     fn strong_replaces_smash_with_strong_smash() {
-        use crate::characters::Character;
+        use crate::choices::Character;
 
         let original = Character::Samurai.moves();
         let mut replaced = original.clone();

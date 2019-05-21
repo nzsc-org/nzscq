@@ -1,8 +1,6 @@
 use crate::{
-    boosters::Booster,
-    characters::Character,
-    player::{Action, FinishedPlayer},
-    queue::DequeueChoice,
+    choices::{Action, Booster, Character, DequeueChoice},
+    player::FinishedPlayer,
 };
 
 #[derive(Debug, Clone)]

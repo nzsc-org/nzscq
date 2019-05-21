@@ -1,5 +1,6 @@
-use super::{boosterless::BoosterlessPlayer, CanChoose, Choose};
-use crate::characters::{Character, CharacterChoices, CharacterStreak};
+use super::{BoosterlessPlayer, };
+use crate::choices::{CanChoose, Choose,Character};
+use crate::counters::{CharacterChoices, CharacterStreak};
 use crate::game::GameConfig;
 
 #[derive(Debug, Clone)]

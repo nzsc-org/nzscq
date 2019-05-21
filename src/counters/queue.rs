@@ -1,4 +1,4 @@
-use crate::player::ArsenalItem;
+use crate::choices::{ArsenalItem, DequeueChoice};
 
 #[derive(Debug, Clone)]
 pub struct Queue {
@@ -57,17 +57,10 @@ impl Queue {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DequeueChoice {
-    DrainAndExit(ArsenalItem),
-    JustExit,
-    Decline,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::moves::Move;
+    use crate::choices::Move;
 
     #[test]
     fn enqueue_moves_item_to_entrance() {

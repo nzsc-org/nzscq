@@ -1,13 +1,11 @@
 pub mod game;
 pub mod prelude {
-    pub use crate::game::*;
+    pub use crate::game::{Game, GameConfig};
 }
 
-pub mod boosters;
-pub mod characters;
-pub mod moves;
-pub mod phase;
+pub mod choices;
+pub mod counters;
+pub mod outcomes;
 pub mod player;
-pub mod queue;
 
 mod helpers;

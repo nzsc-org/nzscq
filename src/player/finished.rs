@@ -1,8 +1,6 @@
-use super::ArsenalItem;
-use crate::boosters::Booster;
-use crate::characters::Character;
+use crate::choices::{ArsenalItem, Booster, Character};
+use crate::counters::Queue;
 use crate::game::GameConfig;
-use crate::queue::Queue;
 
 #[derive(Debug, Clone)]
 pub struct FinishedPlayer {

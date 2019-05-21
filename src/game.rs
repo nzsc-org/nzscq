@@ -1,17 +1,15 @@
 use crate::{
-    boosters::Booster,
-    characters::Character,
+    choices::{Action, Booster, Character, Choose, DequeueChoice},
     helpers,
-    phase::{
-        outcomes::{
-            ActionPhaseOutcome, ActionPoints, BoosterPhaseOutcome, CharacterHeadstart,
-            CharacterPhaseOutcome, DraineePhaseOutcome,
-        },
-        Phase, PhaseComplete,
+    outcomes::{
+        ActionPhaseOutcome, ActionPoints, BoosterPhaseOutcome, CharacterHeadstart,
+        CharacterPhaseOutcome, DraineePhaseOutcome,
     },
-    player::{Action, CharacterlessPlayer, Choose, FinishedPlayer},
-    queue::DequeueChoice,
+    player::{
+        ActionlessPlayer, BoosterlessPlayer, CharacterlessPlayer, DraineelessPlayer, FinishedPlayer,
+    },
 };
+
 use std::mem;
 
 #[derive(Debug, Clone)]
@@ -307,6 +305,28 @@ pub enum Choices {
     DrainedMove(Vec<Option<Vec<DequeueChoice>>>),
     Action(Vec<Option<Vec<Action>>>),
     None,
+}
+
+#[derive(Debug, Clone)]
+pub enum Phase {
+    Character(Vec<CharacterlessPlayer>),
+    Booster(Vec<BoosterlessPlayer>),
+    DrainedMove(Vec<DraineelessPlayer>),
+    Action(Vec<ActionlessPlayer>),
+    Final(Vec<FinishedPlayer>),
+}
+
+pub(crate) trait PhaseComplete<C> {
+    fn complete(&self) -> bool;
+}
+
+impl<P, C> PhaseComplete<C> for Vec<P>
+where
+    P: Choose<C>,
+{
+    fn complete(&self) -> bool {
+        self.iter().all(|p| p.has_chosen())
+    }
 }
 
 // TODO Handle destructives and single-use moves.
