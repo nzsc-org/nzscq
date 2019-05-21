@@ -132,6 +132,38 @@ mod tests {
     }
 
     #[test]
+    fn shadow_has_correct_mirror_choices() {
+        use crate::choices::Move;
+
+        let mut actionless_shadow = actionless_shadow();
+        let mut draineeless_shadow;
+        let choices = vec![
+            (Action::Move(Move::Kick), DequeueChoice::Decline),
+            (Action::Move(Move::Nunchucks), DequeueChoice::Decline),
+            (Action::Move(Move::ShadowFireball), DequeueChoice::Decline),
+            (
+                Action::Move(Move::ShadowSlip),
+                DequeueChoice::DrainAndExit(ArsenalItem::Move(Move::Nunchucks)),
+            ),
+        ];
+        for (action, dequeue_choice) in choices {
+            actionless_shadow.choose(action).unwrap();
+            draineeless_shadow = actionless_shadow.into_draineeless().unwrap();
+            draineeless_shadow.choose(dequeue_choice).unwrap();
+            actionless_shadow = draineeless_shadow.into_actionless().unwrap();
+        }
+
+        assert_eq!(
+            Some(vec![
+                Action::Move(Move::NinjaSword),
+                Action::Mirror(Move::Kick),
+                Action::Mirror(Move::ShadowFireball)
+            ]),
+            actionless_shadow.choices()
+        );
+    }
+
+    #[test]
     fn add_points_works() {
         let mut shadow = actionless_shadow();
         shadow.add_points(3);
