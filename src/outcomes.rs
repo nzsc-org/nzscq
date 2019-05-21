@@ -6,7 +6,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub enum CharacterPhaseOutcome {
     Done(Vec<CharacterHeadstart>),
-    Rechoose,
+    Rechoose(Vec<Character>),
     Pending,
 }
 

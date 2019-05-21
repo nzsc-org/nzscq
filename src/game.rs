@@ -103,10 +103,11 @@ impl Game {
                         let mut character_codes: Vec<u8> =
                             players.iter().map(|p| p.choice().unwrap() as u8).collect();
                         if helpers::has_duplicates(&mut character_codes) {
+                            let characters = players.iter().map(|p| p.choice().unwrap()).collect();
                             for p in players {
                                 p.clear_choice().unwrap();
                             }
-                            CharacterPhaseOutcome::Rechoose
+                            CharacterPhaseOutcome::Rechoose(characters)
                         } else {
                             let all_characters: Vec<Character> =
                                 players.iter().map(|p| p.choice().unwrap()).collect();
