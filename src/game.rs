@@ -15,7 +15,6 @@ use std::mem;
 #[derive(Debug, Clone)]
 pub struct Game {
     config: GameConfig,
-    previous_phase: Option<Phase>,
     phase: Phase,
 }
 
@@ -42,7 +41,6 @@ impl Game {
     pub fn new(config: GameConfig) -> Self {
         Self {
             config: config.clone(),
-            previous_phase: None,
             phase: Phase::Character(Self::initial_players(&config)),
         }
     }
