@@ -4,7 +4,7 @@ use crate::helpers;
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Character {
     Ninja = 0,
     Zombie = 1,

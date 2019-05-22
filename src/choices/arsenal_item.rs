@@ -1,6 +1,6 @@
 use super::{Action, Move};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ArsenalItem {
     Mirror,
     Move(Move),
