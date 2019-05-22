@@ -18,7 +18,7 @@ pub struct Game {
     phase: Phase,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GameConfig {
     pub player_count: u8,
     pub max_points: u8,
