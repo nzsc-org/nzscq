@@ -3,20 +3,20 @@ use crate::{
     player::FinishedPlayer,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CharacterPhaseOutcome {
     Done(Vec<CharacterHeadstart>),
     Rechoose(Vec<Character>),
     Pending,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BoosterPhaseOutcome {
     Done(Vec<Booster>),
     Pending,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DraineePhaseOutcome {
     Done(Vec<DequeueChoice>),
     Pending,
@@ -29,8 +29,8 @@ pub enum ActionPhaseOutcome {
     Pending,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CharacterHeadstart(pub Character, pub u8);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ActionPoints(pub Action, pub u8);

@@ -39,24 +39,17 @@ impl Default for GameConfig {
 }
 
 impl Game {
-    pub fn new(player_count: u8) -> Self {
-        let config = GameConfig {
-            player_count,
-            max_points: 5,
-            max_character_repetitions: 3,
-            max_arsenal_items: 2,
-        };
-
+    pub fn new(config: GameConfig) -> Self {
         Self {
             config: config.clone(),
             previous_phase: None,
-            phase: Phase::Character(Self::initial_players(player_count, &config)),
+            phase: Phase::Character(Self::initial_players(&config)),
         }
     }
 
-    fn initial_players(player_count: u8, config: &GameConfig) -> Vec<CharacterlessPlayer> {
+    fn initial_players(config: &GameConfig) -> Vec<CharacterlessPlayer> {
         let mut players: Vec<CharacterlessPlayer> = vec![];
-        for _ in 0..player_count {
+        for _ in 0..config.player_count {
             players.push(CharacterlessPlayer::from_game_config(config.clone()))
         }
         players
@@ -299,7 +292,7 @@ impl Game {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Choices {
     Character(Vec<Option<Vec<Character>>>),
     Booster(Vec<Option<Vec<Booster>>>),
@@ -331,3 +324,146 @@ where
 }
 
 // TODO Handle destructives and single-use moves.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn game_config_default_works() {
+        let _config = GameConfig::default();
+    }
+
+    #[test]
+    fn game_new_works() {
+        let _game = Game::new(GameConfig::default());
+    }
+
+    #[test]
+    fn initial_players_returns_the_correct_amount_of_players() {
+        let config = GameConfig::default();
+        assert_eq!(
+            config.player_count as usize,
+            Game::initial_players(&config).len()
+        );
+    }
+
+    #[test]
+    fn all_players_can_initially_choose_any_character() {
+        let game = Game::new(GameConfig::default());
+        assert_eq!(
+            Choices::Character(vec![Some(Character::all()), Some(Character::all())]),
+            game.choices()
+        );
+    }
+
+    #[test]
+    fn all_players_must_rechoose_if_duplicate_characters_picked() {
+        use crate::outcomes::CharacterPhaseOutcome;
+
+        let mut game = Game::new(GameConfig::default());
+        assert_eq!(
+            Ok(CharacterPhaseOutcome::Pending),
+            game.choose_character(0, Character::Ninja)
+        );
+        assert_eq!(
+            Ok(CharacterPhaseOutcome::Rechoose(vec![
+                Character::Ninja,
+                Character::Ninja
+            ])),
+            game.choose_character(1, Character::Ninja)
+        );
+    }
+
+    #[test]
+    fn character_phase_ends_if_players_pick_unique_characters() {
+        use crate::outcomes::{CharacterHeadstart, CharacterPhaseOutcome};
+
+        let mut game = Game::new(GameConfig::default());
+        assert_eq!(
+            Ok(CharacterPhaseOutcome::Pending),
+            game.choose_character(0, Character::Ninja)
+        );
+        assert_eq!(
+            Ok(CharacterPhaseOutcome::Done(vec![
+                CharacterHeadstart(Character::Ninja, 1),
+                CharacterHeadstart(Character::Samurai, 0)
+            ])),
+            game.choose_character(1, Character::Samurai)
+        );
+    }
+
+    #[test]
+    fn player_cannot_choose_character_twice() {
+        use crate::outcomes::CharacterPhaseOutcome;
+
+        let mut game = Game::new(GameConfig::default());
+        assert_eq!(
+            Ok(CharacterPhaseOutcome::Pending),
+            game.choose_character(0, Character::Ninja)
+        );
+        assert!(game.choose_character(0, Character::Samurai).is_err());
+    }
+
+    #[test]
+    fn players_cannot_choose_character_they_repeated_maximum_times() {
+        use crate::outcomes::CharacterPhaseOutcome;
+
+        const REPETITIVE_PLAYER_COUNT: u8 = 3;
+        const MAX_CHARACTER_REPETITIONS: u8 = 3;
+        let mut config = GameConfig::default();
+        config.player_count = REPETITIVE_PLAYER_COUNT + 1;
+        config.max_character_repetitions = MAX_CHARACTER_REPETITIONS;
+
+        let mut game = Game::new(config);
+
+        const REPEATED_CHARACTERS: [Character; REPETITIVE_PLAYER_COUNT as usize] =
+            [Character::Ninja, Character::Ninja, Character::Samurai];
+        const NON_REPEATED_CHARACTERS: [Character; MAX_CHARACTER_REPETITIONS as usize] =
+            [Character::Ninja, Character::Zombie, Character::Samurai];
+        const NON_REPEATING_PLAYER_INDEX: usize = REPETITIVE_PLAYER_COUNT as usize;
+
+        let mut outcome: Option<CharacterPhaseOutcome> = None;
+
+        for i in 0..game.config.max_character_repetitions {
+            for j in 0..REPETITIVE_PLAYER_COUNT {
+                let j = j as usize;
+                game.choose_character(j, REPEATED_CHARACTERS[j]).unwrap();
+            }
+
+            let j = NON_REPEATING_PLAYER_INDEX;
+            outcome = Some(
+                game.choose_character(j, NON_REPEATED_CHARACTERS[i as usize])
+                    .unwrap(),
+            );
+        }
+
+        let outcome = outcome.unwrap();
+
+        assert_eq!(
+            CharacterPhaseOutcome::Rechoose(vec![
+                Character::Ninja,
+                Character::Ninja,
+                Character::Samurai,
+                Character::Samurai
+            ]),
+            outcome
+        );
+
+        if let Choices::Character(choices) = game.choices() {
+            let mut no_ninja = Character::all();
+            no_ninja.retain(|c| c != &Character::Ninja);
+            let no_ninja = Some(no_ninja);
+            let mut no_samurai = Character::all();
+            no_samurai.retain(|c| c != &Character::Samurai);
+            let no_samurai = Some(no_samurai);
+            let all = Some(Character::all());
+            assert_eq!(no_ninja, choices[0]);
+            assert_eq!(no_ninja, choices[1]);
+            assert_eq!(no_samurai, choices[2]);
+            assert_eq!(all, choices[3]);
+        } else {
+            panic!("Game on wrong phase.");
+        }
+    }
+}
