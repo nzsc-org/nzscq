@@ -4,7 +4,7 @@ use crate::helpers;
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Booster {
     Shadow,
     Speedy,
