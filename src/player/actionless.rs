@@ -64,22 +64,22 @@ impl Choose<Action> for ActionlessPlayer {
         } else {
             let has_mirror = self.arsenal.contains(&ArsenalItem::Mirror);
             let mut actions: Vec<Action> = vec![];
-            let mut move_actions: Vec<Action> = self
+            let move_actions: Vec<Action> = self
                 .arsenal
                 .iter()
                 .filter(|item| item != &&ArsenalItem::Mirror)
                 .map(|item| item.as_move_action().unwrap())
                 .collect();
-            actions.append(&mut move_actions);
+            actions.extend(move_actions);
             if has_mirror {
-                let mut mirror_actions: Vec<Action> = self
+                let mirror_actions: Vec<Action> = self
                     .queue
                     .pool()
                     .clone()
                     .into_iter()
                     .map(|item| item.as_mirror_action().unwrap())
                     .collect();
-                actions.append(&mut mirror_actions);
+                actions.extend(mirror_actions);
             }
             if actions.len() == 0 {
                 actions.push(Action::Concede);

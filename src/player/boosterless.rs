@@ -32,7 +32,7 @@ impl BoosterlessPlayer {
 
     fn initial_arsenal(&self, booster: Booster) -> Vec<ArsenalItem> {
         let mut moves = self.character.moves();
-        moves.append(&mut booster.moves());
+        moves.extend(booster.moves());
         booster.replace_moves(&mut moves);
         let arsenal: Vec<ArsenalItem> = moves.into_iter().map(|m| ArsenalItem::Move(m)).collect();
 
