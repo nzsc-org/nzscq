@@ -464,4 +464,64 @@ mod tests {
             panic!("Game on wrong phase.");
         }
     }
+
+    #[test]
+    fn ninja_can_choose_shadow() {
+        let mut game = Game::new(GameConfig::default());
+        game.choose_character(0, Character::Ninja).unwrap();
+        game.choose_character(1, Character::Samurai).unwrap();
+        if let Choices::Booster(choices) = game.choices() {
+            assert!(choices[0].as_ref().unwrap().contains(&Booster::Shadow));
+            assert!(game.choose_booster(0, Booster::Shadow).is_ok());
+        } else {
+            panic!("Game on wrong phase.");
+        }
+    }
+
+    #[test]
+    fn ninja_cannot_choose_atlas() {
+        let mut game = Game::new(GameConfig::default());
+        game.choose_character(0, Character::Ninja).unwrap();
+        game.choose_character(1, Character::Samurai).unwrap();
+        if let Choices::Booster(choices) = game.choices() {
+            assert!(!choices[0].as_ref().unwrap().contains(&Booster::Atlas));
+            assert!(game.choose_booster(0, Booster::Atlas).is_err());
+        } else {
+            panic!("Game on wrong phase.");
+        }
+    }
+
+    #[test]
+    fn player_cannot_choose_twice() {
+        let mut game = Game::new(GameConfig::default());
+        game.choose_character(0, Character::Ninja).unwrap();
+        game.choose_character(1, Character::Samurai).unwrap();
+        game.choose_booster(0, Booster::Shadow).unwrap();
+        assert!(game.choose_booster(0, Booster::Speedy).is_err());
+    }
+
+    #[test]
+    fn players_can_choose_in_any_order() {
+        let mut game = Game::new(GameConfig::default());
+        game.choose_character(1, Character::Samurai).unwrap();
+        game.choose_character(0, Character::Ninja).unwrap();
+        game.choose_booster(0, Booster::Shadow).unwrap();
+        game.choose_booster(1, Booster::Atlas).unwrap();
+    }
+
+    #[test]
+    fn booster_phase_ends_if_all_players_have_chosen() {
+        let mut game = Game::new(GameConfig::default());
+        game.choose_character(0, Character::Ninja).unwrap();
+        game.choose_character(1, Character::Samurai).unwrap();
+        game.choose_booster(0, Booster::Shadow).unwrap();
+        assert_eq!(
+            Ok(BoosterPhaseOutcome::Done(vec![
+                Booster::Shadow,
+                Booster::Atlas
+            ])),
+            game.choose_booster(1, Booster::Atlas)
+        );
+    }
+
 }
