@@ -66,7 +66,7 @@ impl Choose<Booster> for BoosterlessPlayer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::player::CharacterlessPlayer;
+    use crate::players::CharacterlessPlayer;
 
     fn ninja() -> BoosterlessPlayer {
         let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());

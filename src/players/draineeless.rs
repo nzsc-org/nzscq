@@ -78,7 +78,7 @@ mod tests {
     use super::*;
 
     fn shadow() -> DraineelessPlayer {
-        use crate::player::CharacterlessPlayer;
+        use crate::players::CharacterlessPlayer;
 
         let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
         player.choose(Character::Ninja).unwrap();

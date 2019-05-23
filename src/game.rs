@@ -5,7 +5,7 @@ use crate::{
         ActionPhaseOutcome, ActionPoints, BoosterPhaseOutcome, CharacterHeadstart,
         CharacterPhaseOutcome, DraineePhaseOutcome,
     },
-    player::{
+    players::{
         ActionlessPlayer, BoosterlessPlayer, CharacterlessPlayer, DraineelessPlayer, FinishedPlayer,
     },
 };

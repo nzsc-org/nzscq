@@ -5,6 +5,6 @@ pub mod outcomes;
 
 mod counters;
 
-mod player;
+mod players;
 
 mod helpers;

@@ -107,7 +107,7 @@ impl Choose<Action> for ActionlessPlayer {
 mod tests {
     use super::*;
     use crate::choices::DequeueChoice;
-    use crate::player::CharacterlessPlayer;
+    use crate::players::CharacterlessPlayer;
 
     fn actionless_shadow() -> ActionlessPlayer {
         let mut shadow = draineeless_shadow();
