@@ -290,6 +290,12 @@ impl Game {
     }
 }
 
+impl Default for Game {
+    fn default() -> Game {
+        Game::new(GameConfig::default())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Choices {
     Character(Vec<Option<Vec<Character>>>),
@@ -334,7 +340,7 @@ mod tests {
 
     #[test]
     fn game_new_works() {
-        let _game = Game::new(GameConfig::default());
+        let _game = Game::default();
     }
 
     #[test]
@@ -348,7 +354,7 @@ mod tests {
 
     #[test]
     fn all_players_can_initially_choose_any_character() {
-        let game = Game::new(GameConfig::default());
+        let game = Game::default();
         assert_eq!(
             Choices::Character(vec![Some(Character::all()), Some(Character::all())]),
             game.choices()
@@ -359,7 +365,7 @@ mod tests {
     fn all_players_must_rechoose_if_duplicate_characters_picked() {
         use crate::outcomes::CharacterPhaseOutcome;
 
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         assert_eq!(
             Ok(CharacterPhaseOutcome::Pending),
             game.choose_character(0, Character::Ninja)
@@ -377,7 +383,7 @@ mod tests {
     fn character_phase_ends_if_players_pick_unique_characters() {
         use crate::outcomes::{CharacterHeadstart, CharacterPhaseOutcome};
 
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         assert_eq!(
             Ok(CharacterPhaseOutcome::Pending),
             game.choose_character(0, Character::Ninja)
@@ -395,7 +401,7 @@ mod tests {
     fn player_cannot_choose_character_twice() {
         use crate::outcomes::CharacterPhaseOutcome;
 
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         assert_eq!(
             Ok(CharacterPhaseOutcome::Pending),
             game.choose_character(0, Character::Ninja)
@@ -467,7 +473,7 @@ mod tests {
 
     #[test]
     fn ninja_can_choose_shadow() {
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         game.choose_character(0, Character::Ninja).unwrap();
         game.choose_character(1, Character::Samurai).unwrap();
         if let Choices::Booster(choices) = game.choices() {
@@ -480,7 +486,7 @@ mod tests {
 
     #[test]
     fn ninja_cannot_choose_atlas() {
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         game.choose_character(0, Character::Ninja).unwrap();
         game.choose_character(1, Character::Samurai).unwrap();
         if let Choices::Booster(choices) = game.choices() {
@@ -493,7 +499,7 @@ mod tests {
 
     #[test]
     fn player_cannot_choose_twice() {
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         game.choose_character(0, Character::Ninja).unwrap();
         game.choose_character(1, Character::Samurai).unwrap();
         game.choose_booster(0, Booster::Shadow).unwrap();
@@ -502,7 +508,7 @@ mod tests {
 
     #[test]
     fn players_can_choose_in_any_order() {
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         game.choose_character(1, Character::Samurai).unwrap();
         game.choose_character(0, Character::Ninja).unwrap();
         game.choose_booster(0, Booster::Shadow).unwrap();
@@ -511,7 +517,7 @@ mod tests {
 
     #[test]
     fn booster_phase_ends_if_all_players_have_chosen() {
-        let mut game = Game::new(GameConfig::default());
+        let mut game = Game::default();
         game.choose_character(0, Character::Ninja).unwrap();
         game.choose_character(1, Character::Samurai).unwrap();
         game.choose_booster(0, Booster::Shadow).unwrap();
@@ -524,4 +530,37 @@ mod tests {
         );
     }
 
+    #[test]
+    fn shadow_can_initially_drain_mirror() {
+        use crate::choices::ArsenalItem;
+
+        let mut game = Game::default();
+        game.choose_character(0, Character::Ninja).unwrap();
+        game.choose_character(1, Character::Samurai).unwrap();
+        game.choose_booster(0, Booster::Shadow).unwrap();
+        game.choose_booster(1, Booster::Atlas).unwrap();
+        assert_eq!(
+            Ok(DraineePhaseOutcome::Pending),
+            game.choose_drainee(0, DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+        );
+    }
+
+    #[test]
+    fn shadow_can_initially_choose_shadow_fireball() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = Game::default();
+        game.choose_character(0, Character::Ninja).unwrap();
+        game.choose_character(1, Character::Samurai).unwrap();
+        game.choose_booster(0, Booster::Shadow).unwrap();
+        game.choose_booster(1, Booster::Atlas).unwrap();
+        game.choose_drainee(0, DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
+        game.choose_drainee(1, DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
+        assert_eq!(
+            Ok(ActionPhaseOutcome::Pending),
+            game.choose_action(0, Action::Move(Move::ShadowFireball))
+        );
+    }
 }
