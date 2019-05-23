@@ -22,7 +22,7 @@ pub enum DraineePhaseOutcome {
     Pending,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ActionPhaseOutcome {
     Done(Vec<ActionPoints>),
     GameOver(Vec<FinishedPlayer>),

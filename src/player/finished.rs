@@ -2,7 +2,7 @@ use crate::choices::{ArsenalItem, Booster, Character};
 use crate::counters::Queue;
 use crate::game::GameConfig;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FinishedPlayer {
     pub(super) game_config: GameConfig,
     pub(super) points: u8,
