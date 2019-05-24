@@ -1,4 +1,4 @@
-use super::{Booster, Move};
+use super::{Booster, Move, PointsAgainst};
 use crate::helpers;
 
 use std::fmt::{self, Display, Formatter};
@@ -39,10 +39,12 @@ impl Character {
             Character::Clown => vec![Booster::Backwards, Booster::Moustachio, Booster::None],
         }
     }
+}
 
-    pub fn points_against(self, other: Character) -> u8 {
-        let self_index = self as usize;
-        let other_index = other as usize;
+impl PointsAgainst for Character {
+    fn points_against(&self, other: &Character) -> u8 {
+        let self_index = *self as usize;
+        let other_index = *other as usize;
         CHARACTER_HEADSTARTS[other_index * 4 + self_index]
     }
 }
@@ -91,15 +93,39 @@ mod tests {
     }
 
     #[test]
+    fn ninja_zombie_samurai_headstarts_equals_1_0_0() {
+        assert_eq!(
+            vec![1, 0, 0],
+            Character::points_of(&vec![
+                Character::Ninja,
+                Character::Zombie,
+                Character::Samurai
+            ])
+        );
+    }
+
+    #[test]
+    fn points_of_ninja_zombie_samurai_clown_equals_1_0_1_1() {
+        assert_eq!(
+            vec![1, 0, 1, 1],
+            Character::points_of(&vec![
+                Character::Ninja,
+                Character::Zombie,
+                Character::Samurai,
+                Character::Clown
+            ])
+        );
+    }
+
+    #[test]
     fn ninja_beats_samurai() {
-        assert_eq!(Character::Ninja.points_against(Character::Samurai), 1);
-        assert_eq!(Character::Samurai.points_against(Character::Ninja), 0);
+        assert_eq!(Character::Ninja.points_against(&Character::Samurai), 1);
+        assert_eq!(Character::Samurai.points_against(&Character::Ninja), 0);
     }
 
     #[test]
     fn ninja_ties_zombie() {
-        assert_eq!(Character::Ninja.points_against(Character::Zombie), 0);
-        assert_eq!(Character::Zombie.points_against(Character::Ninja), 0);
+        assert_eq!(Character::Ninja.points_against(&Character::Zombie), 0);
+        assert_eq!(Character::Zombie.points_against(&Character::Ninja), 0);
     }
-
 }

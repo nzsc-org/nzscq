@@ -1,5 +1,5 @@
 use super::{DraineelessPlayer, FinishedPlayer};
-use crate::choices::{Action, ArsenalItem, Booster, CanChoose, Character, Choose};
+use crate::choices::{Action, ArsenalItem, Booster, Character, Choose};
 use crate::counters::Queue;
 use crate::game::GameConfig;
 
@@ -11,37 +11,39 @@ pub struct ActionlessPlayer {
     pub(super) booster: Booster,
     pub(super) arsenal: Vec<ArsenalItem>,
     pub(super) queue: Queue,
-    pub(super) pending_action: Option<Action>,
 }
 
 impl ActionlessPlayer {
-    pub(crate) fn add_points(&mut self, points: u8) {
+    pub fn points(&self) -> u8 {
+        self.points
+    }
+
+    pub fn add_points(&mut self, points: u8) {
         self.points += points;
     }
 
-    pub(crate) fn needs_points_to_win(&self) -> bool {
-        self.points < self.game_config.max_points
+    pub fn deduct_points(&mut self, points: u8) {
+        if self.points < points {
+            self.points = 0;
+        } else {
+            self.points -= points;
+        }
     }
 
-    pub fn into_draineeless(mut self) -> Result<DraineelessPlayer, ()> {
-        if let Some(action) = self.pending_action {
-            let arsenal_item = action.into_opt_arsenal_item();
-            if let Some(arsenal_item) = &arsenal_item {
-                self.arsenal.retain(|m| m != arsenal_item);
-            }
-            self.queue.enqueue(arsenal_item);
+    pub fn into_draineeless(mut self, action: Action) -> DraineelessPlayer {
+        let arsenal_item = action.into_opt_arsenal_item();
+        if let Some(arsenal_item) = &arsenal_item {
+            self.arsenal.retain(|m| m != arsenal_item);
+        }
+        self.queue.enqueue(arsenal_item);
 
-            Ok(DraineelessPlayer {
-                game_config: self.game_config,
-                points: self.points,
-                character: self.character,
-                booster: self.booster,
-                arsenal: self.arsenal,
-                queue: self.queue,
-                choice: None,
-            })
-        } else {
-            Err(())
+        DraineelessPlayer {
+            game_config: self.game_config,
+            points: self.points,
+            character: self.character,
+            booster: self.booster,
+            arsenal: self.arsenal,
+            queue: self.queue,
         }
     }
 
@@ -58,48 +60,31 @@ impl ActionlessPlayer {
 }
 
 impl Choose<Action> for ActionlessPlayer {
-    fn choices(&self) -> Option<Vec<Action>> {
-        if self.has_chosen() {
-            None
-        } else {
-            let has_mirror = self.arsenal.contains(&ArsenalItem::Mirror);
-            let mut actions: Vec<Action> = vec![];
-            let move_actions: Vec<Action> = self
-                .arsenal
-                .iter()
-                .filter(|item| item != &&ArsenalItem::Mirror)
-                .map(|item| item.as_move_action().unwrap())
+    fn choices(&self) -> Vec<Action> {
+        let has_mirror = self.arsenal.contains(&ArsenalItem::Mirror);
+        let mut actions: Vec<Action> = vec![];
+        let move_actions: Vec<Action> = self
+            .arsenal
+            .iter()
+            .filter(|item| item != &&ArsenalItem::Mirror)
+            .map(|item| item.as_move_action().unwrap())
+            .collect();
+        actions.extend(move_actions);
+        if has_mirror {
+            let mirror_actions: Vec<Action> = self
+                .queue
+                .pool()
+                .clone()
+                .into_iter()
+                .map(|item| item.as_mirror_action().unwrap())
                 .collect();
-            actions.extend(move_actions);
-            if has_mirror {
-                let mirror_actions: Vec<Action> = self
-                    .queue
-                    .pool()
-                    .clone()
-                    .into_iter()
-                    .map(|item| item.as_mirror_action().unwrap())
-                    .collect();
-                actions.extend(mirror_actions);
-            }
-            if actions.len() == 0 {
-                actions.push(Action::Concede);
-            }
-
-            Some(actions)
+            actions.extend(mirror_actions);
         }
-    }
-
-    fn choose(&mut self, action: Action) -> Result<(), ()> {
-        if self.can_choose(&action) {
-            self.pending_action = Some(action);
-            Ok(())
-        } else {
-            Err(())
+        if actions.len() == 0 {
+            actions.push(Action::Concede);
         }
-    }
 
-    fn choice(&self) -> Option<Action> {
-        self.pending_action
+        actions
     }
 }
 
@@ -110,25 +95,21 @@ mod tests {
     use crate::players::CharacterlessPlayer;
 
     fn actionless_shadow() -> ActionlessPlayer {
-        let mut shadow = draineeless_shadow();
-        shadow
-            .choose(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
-            .unwrap();
-        shadow.into_actionless().unwrap()
+        let shadow = draineeless_shadow();
+        shadow.into_actionless(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
     }
 
     fn draineeless_shadow() -> DraineelessPlayer {
-        let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
-        player.choose(Character::Ninja).unwrap();
-        let mut ninja = player.into_boosterless().unwrap();
-        ninja.choose(Booster::Shadow).unwrap();
-        ninja.into_draineeless().unwrap()
+        let player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        player
+            .into_boosterless(Character::Ninja)
+            .into_draineeless(Booster::Shadow)
     }
 
     #[test]
     fn shadow_initally_has_five_choices() {
         let shadow = actionless_shadow();
-        assert_eq!(5, shadow.choices().unwrap().len());
+        assert_eq!(5, shadow.choices().len());
     }
 
     #[test]
@@ -147,18 +128,17 @@ mod tests {
             ),
         ];
         for (action, dequeue_choice) in choices {
-            actionless_shadow.choose(action).unwrap();
-            draineeless_shadow = actionless_shadow.into_draineeless().unwrap();
-            draineeless_shadow.choose(dequeue_choice).unwrap();
-            actionless_shadow = draineeless_shadow.into_actionless().unwrap();
+            draineeless_shadow = actionless_shadow.into_draineeless(action);
+            actionless_shadow = draineeless_shadow.into_actionless(dequeue_choice);
         }
 
+        println!("{:#?}", actionless_shadow);
         assert_eq!(
-            Some(vec![
+            vec![
                 Action::Move(Move::NinjaSword),
                 Action::Mirror(Move::Kick),
                 Action::Mirror(Move::ShadowFireball)
-            ]),
+            ],
             actionless_shadow.choices()
         );
     }
@@ -166,38 +146,43 @@ mod tests {
     #[test]
     fn add_points_works() {
         let mut shadow = actionless_shadow();
+        assert_eq!(0, shadow.points);
         shadow.add_points(3);
-        assert_eq!(shadow.points, 3);
+        assert_eq!(3, shadow.points);
     }
 
     #[test]
-    fn needs_points_to_win_if_points_less_than_max() {
+    fn deduct_points_deducts_if_player_has_enough_points() {
         let mut shadow = actionless_shadow();
-        let one_less = shadow.game_config.max_points - 1;
-        shadow.add_points(one_less);
-        assert!(shadow.needs_points_to_win());
+        assert_eq!(0, shadow.points);
+        shadow.add_points(3);
+        shadow.deduct_points(2);
+        assert_eq!(1, shadow.points);
     }
 
     #[test]
-    fn does_not_need_points_to_win_if_points_equals_max() {
+    fn deduct_points_sets_points_to_zero_if_player_does_not_have_enough_points() {
         let mut shadow = actionless_shadow();
-        shadow.add_points(shadow.game_config.max_points);
-        assert!(!shadow.needs_points_to_win());
+        assert_eq!(0, shadow.points);
+        shadow.add_points(3);
+        shadow.deduct_points(5);
+        assert_eq!(0, shadow.points);
     }
 
     #[test]
-    fn into_draineeless_works_if_player_has_chosen() {
+    fn into_draineeless_works() {
         use crate::choices::Move;
 
-        let mut shadow = actionless_shadow();
-        shadow.choose(Action::Move(Move::Kick)).unwrap();
-        assert!(shadow.into_draineeless().is_ok());
-    }
-
-    #[test]
-    fn into_draineeless_fails_if_player_has_not_chosen() {
         let shadow = actionless_shadow();
-        assert!(shadow.into_draineeless().is_err());
+        let mut expected = Queue::new();
+        expected
+            .dequeue(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
+            .unwrap();
+        expected.enqueue(Some(ArsenalItem::Move(Move::Kick)));
+        assert_eq!(
+            expected,
+            shadow.into_draineeless(Action::Move(Move::Kick)).queue
+        );
     }
 
     #[test]
@@ -210,5 +195,4 @@ mod tests {
         assert_eq!(original.booster, finished.booster);
         assert_eq!(original.arsenal, finished.arsenal);
     }
-
 }

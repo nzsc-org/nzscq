@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+use std::hash::Hash;
+
 pub fn lowercase_no_whitespace(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut s = String::new();
@@ -13,13 +16,16 @@ pub fn lowercase_no_whitespace(s: &str) -> String {
     s.to_lowercase()
 }
 
-pub fn has_duplicates<T: Ord>(v: &mut Vec<T>) -> bool {
-    let len = v.len();
-    v.sort_unstable();
-    v.dedup();
-    let unique_len = v.len();
+pub trait HasDuplicates {
+    fn has_duplicates(&self) -> bool;
+}
 
-    len != unique_len
+impl<T: Eq + Hash> HasDuplicates for Vec<T> {
+    fn has_duplicates(&self) -> bool {
+        let mut set = HashSet::new();
+        let is_unique = self.iter().all(|item| set.insert(item));
+        !is_unique
+    }
 }
 
 #[cfg(test)]
@@ -33,13 +39,13 @@ mod tests {
 
     #[test]
     fn fibonacci_sequence_has_duplicates() {
-        let mut fibonacci: Vec<u8> = vec![1, 1, 2, 3, 5];
-        assert!(has_duplicates(&mut fibonacci));
+        let fibonacci: Vec<u8> = vec![1, 1, 2, 3, 5];
+        assert!(fibonacci.has_duplicates());
     }
 
     #[test]
     fn abc_does_not_have_duplicates() {
-        let mut abc: Vec<char> = vec!['a', 'b', 'c'];
-        assert!(!has_duplicates(&mut abc));
+        let abc: Vec<char> = vec!['a', 'b', 'c'];
+        assert!(!abc.has_duplicates());
     }
 }

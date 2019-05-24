@@ -1,3 +1,4 @@
+use super::PointsAgainst;
 use crate::helpers;
 
 use std::fmt::{self, Display, Formatter};
@@ -37,18 +38,20 @@ pub enum Move {
 }
 
 impl Move {
-    pub fn points_against(self, other: Move) -> u8 {
-        let self_index = self as usize;
-        let other_index = other as usize;
-        MOVE_OUTCOMES[other_index * 29 + self_index]
-    }
-
     pub fn is_destructive(self) -> bool {
         DESTRUCTIVE_MOVES.contains(&self)
     }
 
     pub fn is_single_use(self) -> bool {
         SINGLE_USE_MOVES.contains(&self)
+    }
+}
+
+impl PointsAgainst for Move {
+    fn points_against(&self, other: &Move) -> u8 {
+        let self_index = *self as usize;
+        let other_index = *other as usize;
+        MOVE_OUTCOMES[other_index * 29 + self_index]
     }
 }
 
@@ -179,26 +182,26 @@ mod tests {
 
     #[test]
     fn kick_loses_to_smash() {
-        assert_eq!(Move::Kick.points_against(Move::Smash), 0);
-        assert_eq!(Move::Smash.points_against(Move::Kick), 1);
+        assert_eq!(Move::Kick.points_against(&Move::Smash), 0);
+        assert_eq!(Move::Smash.points_against(&Move::Kick), 1);
     }
 
     #[test]
     fn shadow_fireball_beats_smash() {
-        assert_eq!(Move::ShadowFireball.points_against(Move::Smash), 1);
-        assert_eq!(Move::Smash.points_against(Move::ShadowFireball), 0);
+        assert_eq!(Move::ShadowFireball.points_against(&Move::Smash), 1);
+        assert_eq!(Move::Smash.points_against(&Move::ShadowFireball), 0);
     }
 
     #[test]
     fn kick_ties_mustach_mash() {
-        assert_eq!(Move::Kick.points_against(Move::MustacheMash), 0);
-        assert_eq!(Move::MustacheMash.points_against(Move::Kick), 0);
+        assert_eq!(Move::Kick.points_against(&Move::MustacheMash), 0);
+        assert_eq!(Move::MustacheMash.points_against(&Move::Kick), 0);
     }
 
     #[test]
     fn nunchucks_specially_ties_samurai_sword() {
-        assert_eq!(Move::Nunchucks.points_against(Move::SamuraiSword), 1);
-        assert_eq!(Move::SamuraiSword.points_against(Move::Nunchucks), 1);
+        assert_eq!(Move::Nunchucks.points_against(&Move::SamuraiSword), 1);
+        assert_eq!(Move::SamuraiSword.points_against(&Move::Nunchucks), 1);
     }
 
     #[test]
