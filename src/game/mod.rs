@@ -1,5 +1,5 @@
-mod batch_choice;
-pub use batch_choice::BatchChoiceGame;
+mod batch_choice_game;
+pub use batch_choice_game::BatchChoiceGame;
 mod config;
 pub use config::Config;
 
