@@ -1,11 +1,11 @@
 use super::draineeless::DraineelessPlayer;
 use crate::choices::{ArsenalItem, Booster, Character, Choose};
 use crate::counters::Queue;
-use crate::game::GameConfig;
+use crate::game::Config;
 
 #[derive(Debug, Clone)]
 pub struct BoosterlessPlayer {
-    pub(super) game_config: GameConfig,
+    pub(super) game_config: Config,
     pub(super) points: u8,
     pub(super) character: Character,
 }
@@ -46,12 +46,12 @@ mod tests {
     use crate::players::CharacterlessPlayer;
 
     fn ninja() -> BoosterlessPlayer {
-        let player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let player = CharacterlessPlayer::from_game_config(Config::default());
         player.into_boosterless(Character::Ninja)
     }
 
     fn samurai() -> BoosterlessPlayer {
-        let player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let player = CharacterlessPlayer::from_game_config(Config::default());
         player.into_boosterless(Character::Samurai)
     }
 

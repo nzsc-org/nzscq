@@ -1,11 +1,11 @@
 use super::ActionlessPlayer;
 use crate::choices::{ArsenalItem, Booster, Character, Choose, DequeueChoice};
 use crate::counters::Queue;
-use crate::game::GameConfig;
+use crate::game::Config;
 
 #[derive(Debug, Clone)]
 pub struct DraineelessPlayer {
-    pub(super) game_config: GameConfig,
+    pub(super) game_config: Config,
     pub(super) points: u8,
     pub(super) character: Character,
     pub(super) booster: Booster,
@@ -60,7 +60,7 @@ mod tests {
     fn shadow() -> DraineelessPlayer {
         use crate::players::CharacterlessPlayer;
 
-        let player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let player = CharacterlessPlayer::from_game_config(Config::default());
         player
             .into_boosterless(Character::Ninja)
             .into_draineeless(Booster::Shadow)

@@ -1,10 +1,10 @@
 use crate::choices::{ArsenalItem, Booster, Character};
 use crate::counters::Queue;
-use crate::game::GameConfig;
+use crate::game::Config;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FinishedPlayer {
-    pub(super) game_config: GameConfig,
+    pub(super) game_config: Config,
     pub(super) points: u8,
     pub(super) character: Character,
     pub(super) booster: Booster,
@@ -13,7 +13,7 @@ pub struct FinishedPlayer {
 }
 
 impl FinishedPlayer {
-    pub fn game_config(&self) -> &GameConfig {
+    pub fn game_config(&self) -> &Config {
         &self.game_config
     }
 

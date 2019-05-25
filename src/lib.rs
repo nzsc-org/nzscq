@@ -1,10 +1,7 @@
-mod game;
-pub use game::*;
 pub mod choices;
+pub mod game;
 pub mod outcomes;
 
 mod counters;
-
-mod players;
-
 mod helpers;
+mod players;

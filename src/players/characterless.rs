@@ -1,17 +1,17 @@
 use super::BoosterlessPlayer;
 use crate::choices::{Character, Choose};
 use crate::counters::{CharacterChoices, CharacterStreak};
-use crate::game::GameConfig;
+use crate::game::Config;
 
 #[derive(Debug, Clone)]
 pub struct CharacterlessPlayer {
-    game_config: GameConfig,
+    game_config: Config,
     streak: Option<CharacterStreak>,
     points: u8,
 }
 
 impl CharacterlessPlayer {
-    pub fn from_game_config(game_config: GameConfig) -> Self {
+    pub fn from_game_config(game_config: Config) -> Self {
         Self {
             game_config,
             streak: None,
@@ -48,13 +48,13 @@ impl Choose<Character> for CharacterlessPlayer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::game::GameConfig;
+    use crate::game::Config;
 
     #[test]
     fn from_game_works() {
-        let actual = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let actual = CharacterlessPlayer::from_game_config(Config::default());
         let expected = CharacterlessPlayer {
-            game_config: GameConfig::default(),
+            game_config: Config::default(),
             streak: None,
             points: 0,
         };
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn add_points_works() {
-        let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let mut player = CharacterlessPlayer::from_game_config(Config::default());
         assert_eq!(0, player.points);
         player.add_points(3);
         assert_eq!(3, player.points);
@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn add_to_streak_works() {
-        let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let mut player = CharacterlessPlayer::from_game_config(Config::default());
         player.add_to_streak(Character::Ninja);
         let mut expected: Option<CharacterStreak> = None;
         expected
@@ -87,13 +87,13 @@ mod tests {
 
     #[test]
     fn can_choose_any_initially() {
-        let player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let player = CharacterlessPlayer::from_game_config(Config::default());
         assert_eq!(Character::all(), player.choices(),);
     }
 
     #[test]
     fn cannot_choose_repeated_character_when_maximum_reached() {
-        let mut player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let mut player = CharacterlessPlayer::from_game_config(Config::default());
         for _ in 0..player.game_config.max_character_repetitions {
             player.add_to_streak(Character::Ninja);
         }
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn into_boosterless_works() {
-        let player = CharacterlessPlayer::from_game_config(GameConfig::default());
+        let player = CharacterlessPlayer::from_game_config(Config::default());
         assert_eq!(
             Character::Ninja,
             player.into_boosterless(Character::Ninja).character

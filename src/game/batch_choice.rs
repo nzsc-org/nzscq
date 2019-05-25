@@ -1,31 +1,31 @@
+use super::{Config, Phase};
 use crate::{
     choices::{
-        Action, BatchChoice, Booster, CanChoose, Character, Choose, DequeueChoice, PointsAgainst,
+        Action, BatchChoice, BatchChoices, Booster, CanChoose, Character, Choose, DequeueChoice,
+        PointsAgainst,
     },
     helpers::HasDuplicates,
     outcomes::{ActionPointsDestroyed, CharacterHeadstart, Outcome},
-    players::{
-        ActionlessPlayer, BoosterlessPlayer, CharacterlessPlayer, DraineelessPlayer, FinishedPlayer,
-    },
+    players::{CharacterlessPlayer, DraineelessPlayer, FinishedPlayer},
 };
 
 use std::mem;
 
 #[derive(Debug, Clone)]
-pub struct Game {
-    config: GameConfig,
+pub struct BatchChoiceGame {
+    config: Config,
     phase: Phase,
 }
 
-impl Game {
-    pub fn new(config: GameConfig) -> Self {
+impl BatchChoiceGame {
+    pub fn new(config: Config) -> Self {
         Self {
             config: config.clone(),
             phase: Phase::Character(Self::initial_players(&config)),
         }
     }
 
-    fn initial_players(config: &GameConfig) -> Vec<CharacterlessPlayer> {
+    fn initial_players(config: &Config) -> Vec<CharacterlessPlayer> {
         let mut players: Vec<CharacterlessPlayer> = vec![];
         for _ in 0..config.player_count {
             players.push(CharacterlessPlayer::from_game_config(config.clone()))
@@ -33,25 +33,25 @@ impl Game {
         players
     }
 
-    pub fn choices(&self) -> Choices {
+    pub fn choices(&self) -> BatchChoices {
         match &self.phase {
             Phase::Character(players) => {
-                Choices::Character(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::Character(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Booster(players) => {
-                Choices::Booster(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::Booster(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::DrainedMove(players) => {
-                Choices::DrainedMove(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::DrainedMove(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Action(players) => {
-                Choices::Action(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::Action(players.iter().map(|p| p.choices()).collect())
             }
 
-            Phase::Final(_) => Choices::None,
+            Phase::Final(_) => BatchChoices::None,
         }
     }
 
@@ -224,71 +224,10 @@ impl Game {
     }
 }
 
-impl Default for Game {
-    fn default() -> Game {
-        Game::new(GameConfig::default())
+impl Default for BatchChoiceGame {
+    fn default() -> BatchChoiceGame {
+        BatchChoiceGame::new(Config::default())
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GameConfig {
-    pub player_count: u8,
-    pub max_points: u8,
-    pub max_character_repetitions: u8,
-    pub max_arsenal_items: u8,
-}
-
-impl GameConfig {
-    fn clamp_points(&self, players: &mut Vec<ActionlessPlayer>) -> bool {
-        let max = players.iter().map(|p| p.points()).max().unwrap();
-        if max >= self.max_points {
-            let players_with_max = players.iter().filter(|p| p.points() == max).count();
-            if players_with_max > 1 {
-                for p in players {
-                    p.deduct_points(max - self.max_points - 1);
-                }
-
-                false
-            } else {
-                for p in players {
-                    p.deduct_points(max - self.max_points);
-                }
-
-                true
-            }
-        } else {
-            false
-        }
-    }
-}
-
-impl Default for GameConfig {
-    fn default() -> GameConfig {
-        GameConfig {
-            player_count: 2,
-            max_points: 5,
-            max_character_repetitions: 3,
-            max_arsenal_items: 2,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Choices {
-    Character(Vec<Vec<Character>>),
-    Booster(Vec<Vec<Booster>>),
-    DrainedMove(Vec<Vec<DequeueChoice>>),
-    Action(Vec<Vec<Action>>),
-    None,
-}
-
-#[derive(Debug, Clone)]
-enum Phase {
-    Character(Vec<CharacterlessPlayer>),
-    Booster(Vec<BoosterlessPlayer>),
-    DrainedMove(Vec<DraineelessPlayer>),
-    Action(Vec<ActionlessPlayer>),
-    Final(Vec<FinishedPlayer>),
 }
 
 #[cfg(test)]
@@ -296,36 +235,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn game_config_default_works() {
-        let _config = GameConfig::default();
-    }
-
-    #[test]
     fn game_new_works() {
-        let _game = Game::default();
+        let _game = BatchChoiceGame::default();
     }
 
     #[test]
     fn initial_players_returns_the_correct_amount_of_players() {
-        let config = GameConfig::default();
+        let config = Config::default();
         assert_eq!(
             config.player_count as usize,
-            Game::initial_players(&config).len()
+            BatchChoiceGame::initial_players(&config).len()
         );
     }
 
     #[test]
     fn all_players_can_initially_choose_any_character() {
-        let game = Game::default();
+        let game = BatchChoiceGame::default();
         assert_eq!(
-            Choices::Character(vec![Character::all(), Character::all()]),
+            BatchChoices::Character(vec![Character::all(), Character::all()]),
             game.choices()
         );
     }
 
     #[test]
     fn players_cannot_choose_character_twice() {
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_samurai = vec![Character::Ninja, Character::Samurai];
 
         game.choose(BatchChoice::Characters(ninja_samurai.clone()))
@@ -335,9 +269,9 @@ mod tests {
 
     #[test]
     fn players_cannot_choose_character_they_repeated_maximum_times() {
-        let mut game = Game::new(GameConfig {
+        let mut game = BatchChoiceGame::new(Config {
             player_count: 4,
-            ..GameConfig::default()
+            ..Config::default()
         });
 
         let choices = vec![
@@ -378,7 +312,7 @@ mod tests {
         let mut no_samurai = Character::all();
         no_samurai.retain(|c| c != &Character::Samurai);
         assert_eq!(
-            Choices::Character(vec![
+            BatchChoices::Character(vec![
                 no_ninja.clone(),
                 no_ninja,
                 no_samurai,
@@ -390,7 +324,7 @@ mod tests {
 
     #[test]
     fn all_players_must_rechoose_if_duplicate_characters_chosen() {
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_ninja = vec![Character::Ninja, Character::Ninja];
         assert_eq!(
             Ok(Outcome::CharacterPhaseRechoose(ninja_ninja.clone())),
@@ -400,7 +334,7 @@ mod tests {
 
     #[test]
     fn character_phase_ends_if_all_players_choose_legal_characters() {
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_samurai = vec![Character::Ninja, Character::Samurai];
         assert_eq!(
             Ok(Outcome::CharacterPhaseDone(
@@ -416,7 +350,7 @@ mod tests {
 
     #[test]
     fn fails_if_any_booster_is_illegal() {
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_samurai = BatchChoice::Characters(vec![Character::Ninja, Character::Samurai]);
         let strong_atlas = BatchChoice::Boosters(vec![Booster::Strong, Booster::Atlas]);
 
@@ -426,7 +360,7 @@ mod tests {
 
     #[test]
     fn players_cannot_choose_boosters_twice() {
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_samurai = BatchChoice::Characters(vec![Character::Ninja, Character::Samurai]);
         let shadow_atlas = BatchChoice::Boosters(vec![Booster::Shadow, Booster::Atlas]);
 
@@ -437,7 +371,7 @@ mod tests {
 
     #[test]
     fn booster_phase_ends_if_all_boosters_are_legal() {
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_samurai = BatchChoice::Characters(vec![Character::Ninja, Character::Samurai]);
         let shadow_atlas = BatchChoice::Boosters(vec![Booster::Shadow, Booster::Atlas]);
 
@@ -455,7 +389,7 @@ mod tests {
     fn players_can_initally_drain_mirror() {
         use crate::choices::ArsenalItem;
 
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_samurai = BatchChoice::Characters(vec![Character::Ninja, Character::Samurai]);
         let shadow_atlas = BatchChoice::Boosters(vec![Booster::Shadow, Booster::Atlas]);
         let mirror_mirror = BatchChoice::DequeueChoices(vec![
@@ -478,7 +412,7 @@ mod tests {
     fn shadow_can_initially_choose_shadow_fireball() {
         use crate::choices::{ArsenalItem, Move};
 
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let ninja_samurai = BatchChoice::Characters(vec![Character::Ninja, Character::Samurai]);
         let shadow_atlas = BatchChoice::Boosters(vec![Booster::Shadow, Booster::Atlas]);
         let mirror_mirror = BatchChoice::DequeueChoices(vec![
@@ -506,7 +440,7 @@ mod tests {
     fn zap_destroys_shadow_fireball() {
         use crate::choices::{ArsenalItem, Move};
 
-        let mut game = Game::default();
+        let mut game = BatchChoiceGame::default();
         let zombie_ninja = BatchChoice::Characters(vec![Character::Zombie, Character::Ninja]);
         let zombie_corps_shadow =
             BatchChoice::Boosters(vec![Booster::ZombieCorps, Booster::Shadow]);

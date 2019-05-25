@@ -1,5 +1,5 @@
 mod batch_choice;
-pub use batch_choice::BatchChoice;
+pub use batch_choice::{BatchChoice, BatchChoices};
 
 mod moves;
 pub use moves::Move;
