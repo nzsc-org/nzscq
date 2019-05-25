@@ -8,6 +8,15 @@ pub enum Action {
 }
 
 impl Action {
+    pub(crate) fn which_destroyed(actions: &Vec<Action>) -> Vec<bool> {
+        let was_destructive_used = actions.iter().any(|a| a.is_destructive());
+
+        actions
+            .iter()
+            .map(|a| a.is_single_use() || was_destructive_used)
+            .collect()
+    }
+
     pub(crate) fn into_opt_arsenal_item(self) -> Option<ArsenalItem> {
         match self {
             Action::Mirror(_) => Some(ArsenalItem::Mirror),
@@ -22,6 +31,14 @@ impl Action {
             Action::Move(m) => Some(*m),
             Action::Concede => None,
         }
+    }
+
+    fn is_destructive(&self) -> bool {
+        self.move_().map(|m| m.is_destructive()).unwrap_or(false)
+    }
+
+    fn is_single_use(&self) -> bool {
+        self.move_().map(|m| m.is_single_use()).unwrap_or(false)
     }
 }
 

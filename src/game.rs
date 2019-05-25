@@ -3,7 +3,7 @@ use crate::{
         Action, BatchChoice, Booster, CanChoose, Character, Choose, DequeueChoice, PointsAgainst,
     },
     helpers::HasDuplicates,
-    outcomes::{ActionPoints, CharacterHeadstart, Outcome},
+    outcomes::{ActionPointsDestroyed, CharacterHeadstart, Outcome},
     players::{
         ActionlessPlayer, BoosterlessPlayer, CharacterlessPlayer, DraineelessPlayer, FinishedPlayer,
     },
@@ -169,14 +169,22 @@ impl Game {
                 Err(())
             } else {
                 let points = Action::points_of(&actions);
-                let action_points: Vec<ActionPoints> = actions
+                let action_points_destroyed: Vec<ActionPointsDestroyed> = actions
                     .iter()
                     .zip(points)
-                    .map(|(a, p)| ActionPoints(*a, p))
+                    .zip(Action::which_destroyed(&actions))
+                    .map(|((action, points), destroyed)| {
+                        ActionPointsDestroyed(*action, points, destroyed)
+                    })
                     .collect();
 
-                for (player, &ActionPoints(_, points)) in players.iter_mut().zip(&action_points) {
+                for (player, &ActionPointsDestroyed(_, points, destroyed)) in
+                    players.iter_mut().zip(&action_points_destroyed)
+                {
                     player.add_points(points);
+                    if destroyed {
+                        player.destroy_action();
+                    }
                 }
 
                 let have_any_won = self.config.clamp_points(players);
@@ -193,12 +201,12 @@ impl Game {
                     let players = mem::replace(players, dummy);
                     let dequeueing_players: Vec<DraineelessPlayer> = players
                         .into_iter()
-                        .zip(&action_points)
+                        .zip(&action_points_destroyed)
                         .map(|(p, ap)| p.into_draineeless(ap.0))
                         .collect();
                     self.phase = Phase::DrainedMove(dequeueing_players);
 
-                    Ok(Outcome::ActionPhaseDone(action_points))
+                    Ok(Outcome::ActionPhaseDone(action_points_destroyed))
                 }
             }
         } else {
@@ -282,8 +290,6 @@ enum Phase {
     Action(Vec<ActionlessPlayer>),
     Final(Vec<FinishedPlayer>),
 }
-
-// TODO Handle destructives and single-use moves.
 
 #[cfg(test)]
 mod tests {
@@ -489,10 +495,39 @@ mod tests {
         game.choose(mirror_mirror).unwrap();
         assert_eq!(
             Ok(Outcome::ActionPhaseDone(vec![
-                ActionPoints(Action::Move(Move::ShadowFireball), 1),
-                ActionPoints(Action::Move(Move::Lightning), 0),
+                ActionPointsDestroyed(Action::Move(Move::ShadowFireball), 1, false),
+                ActionPointsDestroyed(Action::Move(Move::Lightning), 0, false),
             ])),
             game.choose(fireball_lightning)
+        );
+    }
+
+    #[test]
+    fn zap_destroys_shadow_fireball() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = Game::default();
+        let zombie_ninja = BatchChoice::Characters(vec![Character::Zombie, Character::Ninja]);
+        let zombie_corps_shadow =
+            BatchChoice::Boosters(vec![Booster::ZombieCorps, Booster::Shadow]);
+        let mirror_mirror = BatchChoice::DequeueChoices(vec![
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+        ]);
+        let zap_fireball = BatchChoice::Actions(vec![
+            Action::Move(Move::Zap),
+            Action::Move(Move::ShadowFireball),
+        ]);
+
+        game.choose(zombie_ninja).unwrap();
+        game.choose(zombie_corps_shadow).unwrap();
+        game.choose(mirror_mirror).unwrap();
+        assert_eq!(
+            Ok(Outcome::ActionPhaseDone(vec![
+                ActionPointsDestroyed(Action::Move(Move::Zap), 0, true),
+                ActionPointsDestroyed(Action::Move(Move::ShadowFireball), 0, true),
+            ])),
+            game.choose(zap_fireball)
         );
     }
 }

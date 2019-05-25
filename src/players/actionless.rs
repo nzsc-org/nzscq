@@ -11,6 +11,7 @@ pub struct ActionlessPlayer {
     pub(super) booster: Booster,
     pub(super) arsenal: Vec<ArsenalItem>,
     pub(super) queue: Queue,
+    pub(super) action_destroyed: bool,
 }
 
 impl ActionlessPlayer {
@@ -30,12 +31,19 @@ impl ActionlessPlayer {
         }
     }
 
+    pub fn destroy_action(&mut self) {
+        self.action_destroyed = true;
+    }
+
     pub fn into_draineeless(mut self, action: Action) -> DraineelessPlayer {
         let arsenal_item = action.into_opt_arsenal_item();
         if let Some(arsenal_item) = &arsenal_item {
             self.arsenal.retain(|m| m != arsenal_item);
         }
-        self.queue.enqueue(arsenal_item);
+
+        if !self.action_destroyed {
+            self.queue.enqueue(arsenal_item);
+        }
 
         DraineelessPlayer {
             game_config: self.game_config,
@@ -170,17 +178,34 @@ mod tests {
     }
 
     #[test]
-    fn into_draineeless_works() {
+    fn into_draineeless_works_if_action_destroyed() {
+        use crate::choices::Move;
+
+        let mut shadow = actionless_shadow();
+        shadow.destroy_action();
+
+        let expected_queue = shadow.queue.clone();
+
+        assert_eq!(
+            expected_queue,
+            shadow.into_draineeless(Action::Move(Move::Kick)).queue
+        );
+    }
+
+    #[test]
+    fn into_draineeless_works_if_action_not_destroyed() {
         use crate::choices::Move;
 
         let shadow = actionless_shadow();
-        let mut expected = Queue::new();
-        expected
+
+        let mut expected_queue = Queue::new();
+        expected_queue
             .dequeue(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
             .unwrap();
-        expected.enqueue(Some(ArsenalItem::Move(Move::Kick)));
+        expected_queue.enqueue(Some(ArsenalItem::Move(Move::Kick)));
+
         assert_eq!(
-            expected,
+            expected_queue,
             shadow.into_draineeless(Action::Move(Move::Kick)).queue
         );
     }

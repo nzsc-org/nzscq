@@ -9,7 +9,7 @@ pub enum Outcome {
     CharacterPhaseRechoose(Vec<Character>),
     BoosterPhaseDone(Vec<Booster>),
     DequeuePhaseDone(Vec<DequeueChoice>),
-    ActionPhaseDone(Vec<ActionPoints>),
+    ActionPhaseDone(Vec<ActionPointsDestroyed>),
     GameOver(Vec<FinishedPlayer>),
 }
 
@@ -17,4 +17,4 @@ pub enum Outcome {
 pub struct CharacterHeadstart(pub Character, pub u8);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ActionPoints(pub Action, pub u8);
+pub struct ActionPointsDestroyed(pub Action, pub u8, pub bool);
