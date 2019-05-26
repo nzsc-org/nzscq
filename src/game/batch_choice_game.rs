@@ -601,4 +601,37 @@ mod tests {
 
         assert!(game.choose(mirror_mirror).is_err());
     }
+
+    #[test]
+    fn winner_index_returns_none_if_game_not_over() {
+        let game = BatchChoiceGame::default();
+        assert_eq!(None, game.winner_index());
+    }
+
+    #[test]
+    fn winner_index_returns_some_if_game_over() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = BatchChoiceGame::new(Config {
+            points_to_win: 1,
+            ..Config::default()
+        });
+        let ninja_zombie = BatchChoice::Characters(vec![Character::Ninja, Character::Zombie]);
+        let shadow_regenerative =
+            BatchChoice::Boosters(vec![Booster::Shadow, Booster::Regenerative]);
+        let mirror_mirror = BatchChoice::DequeueChoices(vec![
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+        ]);
+        let slip_regenerate = BatchChoice::Actions(vec![
+            Action::Move(Move::ShadowSlip),
+            Action::Move(Move::Regenerate),
+        ]);
+
+        game.choose(ninja_zombie).unwrap();
+        game.choose(shadow_regenerative).unwrap();
+        game.choose(mirror_mirror).unwrap();
+        game.choose(slip_regenerate).unwrap();
+        assert_eq!(Some(1), game.winner_index());
+    }
 }
