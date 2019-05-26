@@ -4,7 +4,7 @@ use crate::counters::Queue;
 use crate::game::Config;
 
 #[derive(Debug, Clone)]
-pub struct DraineelessPlayer {
+pub struct DequeueChoicelessPlayer {
     pub(super) game_config: Config,
     pub(super) points: u8,
     pub(super) character: Character,
@@ -13,7 +13,7 @@ pub struct DraineelessPlayer {
     pub(super) queue: Queue,
 }
 
-impl DraineelessPlayer {
+impl DequeueChoicelessPlayer {
     pub fn into_actionless(mut self, dequeue_choice: DequeueChoice) -> ActionlessPlayer {
         if let Some(arsenal_item) = self.queue.dequeue(dequeue_choice).unwrap() {
             self.arsenal.push(arsenal_item);
@@ -35,7 +35,7 @@ impl DraineelessPlayer {
     }
 }
 
-impl Choose<DequeueChoice> for DraineelessPlayer {
+impl Choose<DequeueChoice> for DequeueChoicelessPlayer {
     fn choices(&self) -> Vec<DequeueChoice> {
         if self.can_dequeue() {
             let mut items: Vec<DequeueChoice> = self
@@ -57,7 +57,7 @@ impl Choose<DequeueChoice> for DraineelessPlayer {
 mod tests {
     use super::*;
 
-    fn shadow() -> DraineelessPlayer {
+    fn shadow() -> DequeueChoicelessPlayer {
         use crate::players::CharacterlessPlayer;
 
         let player = CharacterlessPlayer::from_game_config(Config::default());

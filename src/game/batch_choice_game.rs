@@ -6,7 +6,7 @@ use crate::{
     },
     helpers::HasDuplicates,
     outcomes::{ActionPointsDestroyed, CharacterHeadstart, Outcome},
-    players::{CharacterlessPlayer, DraineelessPlayer, FinishedPlayer},
+    players::{CharacterlessPlayer, DequeueChoicelessPlayer, FinishedPlayer},
 };
 
 use std::mem;
@@ -199,7 +199,7 @@ impl BatchChoiceGame {
                 } else {
                     let dummy = vec![];
                     let players = mem::replace(players, dummy);
-                    let dequeueing_players: Vec<DraineelessPlayer> = players
+                    let dequeueing_players: Vec<DequeueChoicelessPlayer> = players
                         .into_iter()
                         .zip(&action_points_destroyed)
                         .map(|(p, ap)| p.into_draineeless(ap.0))

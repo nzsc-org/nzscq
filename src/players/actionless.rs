@@ -1,4 +1,4 @@
-use super::{DraineelessPlayer, FinishedPlayer};
+use super::{DequeueChoicelessPlayer, FinishedPlayer};
 use crate::choices::{Action, ArsenalItem, Booster, Character, Choose};
 use crate::counters::Queue;
 use crate::game::Config;
@@ -35,7 +35,7 @@ impl ActionlessPlayer {
         self.action_destroyed = true;
     }
 
-    pub fn into_draineeless(mut self, action: Action) -> DraineelessPlayer {
+    pub fn into_draineeless(mut self, action: Action) -> DequeueChoicelessPlayer {
         let arsenal_item = action.into_opt_arsenal_item();
         if let Some(arsenal_item) = &arsenal_item {
             self.arsenal.retain(|m| m != arsenal_item);
@@ -45,7 +45,7 @@ impl ActionlessPlayer {
             self.queue.enqueue(arsenal_item);
         }
 
-        DraineelessPlayer {
+        DequeueChoicelessPlayer {
             game_config: self.game_config,
             points: self.points,
             character: self.character,
@@ -107,7 +107,7 @@ mod tests {
         shadow.into_actionless(DequeueChoice::DrainAndExit(ArsenalItem::Mirror))
     }
 
-    fn draineeless_shadow() -> DraineelessPlayer {
+    fn draineeless_shadow() -> DequeueChoicelessPlayer {
         let player = CharacterlessPlayer::from_game_config(Config::default());
         player
             .into_boosterless(Character::Ninja)

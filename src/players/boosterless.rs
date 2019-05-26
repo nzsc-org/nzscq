@@ -1,4 +1,4 @@
-use super::draineeless::DraineelessPlayer;
+use super::dequeue_choiceless::DequeueChoicelessPlayer;
 use crate::choices::{ArsenalItem, Booster, Character, Choose};
 use crate::counters::Queue;
 use crate::game::Config;
@@ -11,10 +11,10 @@ pub struct BoosterlessPlayer {
 }
 
 impl BoosterlessPlayer {
-    pub fn into_draineeless(self, booster: Booster) -> DraineelessPlayer {
+    pub fn into_draineeless(self, booster: Booster) -> DequeueChoicelessPlayer {
         let arsenal = self.initial_arsenal(booster);
 
-        DraineelessPlayer {
+        DequeueChoicelessPlayer {
             game_config: self.game_config,
             points: self.points,
             character: self.character,
