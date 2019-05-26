@@ -1,5 +1,3 @@
-use crate::players::ActionlessPlayer;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     pub player_count: u8,
@@ -9,25 +7,21 @@ pub struct Config {
 }
 
 impl Config {
-    pub(super) fn clamp_points(&self, players: &mut Vec<ActionlessPlayer>) -> bool {
-        let max = players.iter().map(|p| p.points()).max().unwrap();
-        if max >= self.points_to_win {
-            let players_with_max = players.iter().filter(|p| p.points() == max).count();
-            if players_with_max > 1 {
-                for p in players {
-                    p.deduct_points(max - self.points_to_win - 1);
-                }
-
-                false
+    pub(super) fn deductions(&self, points: Vec<u8>) -> Vec<u8> {
+        if let Some(max_points) = points.iter().max() {
+            if max_points < &self.points_to_win {
+                vec![0; points.len()]
             } else {
-                for p in players {
-                    p.deduct_points(max - self.points_to_win);
+                let diff = max_points - self.points_to_win;
+                let tie_exists = points.iter().filter(|p| p == &max_points).count() > 1;
+                if tie_exists {
+                    vec![diff + 1; points.len()]
+                } else {
+                    vec![diff; points.len()]
                 }
-
-                true
             }
         } else {
-            false
+            vec![]
         }
     }
 }
@@ -50,5 +44,89 @@ mod tests {
     #[test]
     fn config_default_works() {
         let _ = Config::default();
+    }
+
+    #[test]
+    fn deducts_nothing_if_all_players_points_less_than_winning_amount() {
+        const PLAYER_COUNT: u8 = 3;
+        let config = Config {
+            player_count: PLAYER_COUNT,
+            ..Config::default()
+        };
+        let one_less = config.points_to_win - 1;
+
+        assert_eq!(
+            vec![0; PLAYER_COUNT as usize],
+            config.deductions(vec![one_less; PLAYER_COUNT as usize])
+        );
+    }
+
+    #[test]
+    fn deducts_diff_if_one_player_has_points_greater_than_winning_amount() {
+        const PLAYER_COUNT: u8 = 3;
+        let config = Config {
+            player_count: PLAYER_COUNT,
+            ..Config::default()
+        };
+        let winning = config.points_to_win;
+        let diff = 1;
+        let diff_more = winning + diff;
+
+        assert_eq!(
+            vec![diff; PLAYER_COUNT as usize],
+            config.deductions(vec![winning, winning, diff_more])
+        );
+    }
+
+    #[test]
+    fn deducts_zero_if_one_player_has_points_equal_to_winning_amount() {
+        const PLAYER_COUNT: u8 = 3;
+        let config = Config {
+            player_count: PLAYER_COUNT,
+            ..Config::default()
+        };
+        let winning = config.points_to_win;
+        let diff = 0;
+        let one_less = winning - 1;
+
+        assert_eq!(
+            vec![diff; PLAYER_COUNT as usize],
+            config.deductions(vec![winning, one_less, one_less])
+        );
+    }
+
+    #[test]
+    fn deducts_diff_plus_one_if_multiple_players_have_more_points_than_winning_amount() {
+        const PLAYER_COUNT: u8 = 3;
+        let config = Config {
+            player_count: PLAYER_COUNT,
+            ..Config::default()
+        };
+        let winning = config.points_to_win;
+        let diff = 1;
+        let diff_more = winning + diff;
+
+        assert_eq!(
+            vec![diff + 1; PLAYER_COUNT as usize],
+            config.deductions(vec![winning, diff_more, diff_more])
+        );
+    }
+
+    #[test]
+    fn deducts_one_if_multiple_players_are_tied_for_first_and_have_points_equal_to_winning_amount()
+    {
+        const PLAYER_COUNT: u8 = 3;
+        let config = Config {
+            player_count: PLAYER_COUNT,
+            ..Config::default()
+        };
+        let winning = config.points_to_win;
+        let diff = 0;
+        let one_less = winning - 1;
+
+        assert_eq!(
+            vec![diff + 1; PLAYER_COUNT as usize],
+            config.deductions(vec![winning, winning, one_less])
+        );
     }
 }

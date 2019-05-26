@@ -168,10 +168,10 @@ impl BatchChoiceGame {
             if !players.can_choose(&actions) {
                 Err(())
             } else {
-                let points = Action::points_of(&actions);
+                let points_gained = Action::points_of(&actions);
                 let action_points_destroyed: Vec<ActionPointsDestroyed> = actions
                     .iter()
-                    .zip(points)
+                    .zip(points_gained)
                     .zip(Action::which_destroyed(&actions))
                     .map(|((action, points), destroyed)| {
                         ActionPointsDestroyed(*action, points, destroyed)
@@ -187,8 +187,14 @@ impl BatchChoiceGame {
                     }
                 }
 
-                let have_any_won = self.config.clamp_points(players);
+                let points: Vec<u8> = players.iter().map(|p| p.points()).collect();
+                let deductions = self.config.deductions(points);
+                for (player, points) in players.iter_mut().zip(deductions) {
+                    player.deduct_points(points);
+                }
 
+                let points_to_win = self.config.points_to_win;
+                let have_any_won = players.iter().any(|p| p.points() == points_to_win);
                 if have_any_won {
                     let dummy = vec![];
                     let players = mem::replace(players, dummy);
