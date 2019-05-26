@@ -17,4 +17,4 @@ pub enum Outcome {
 pub struct CharacterHeadstart(pub Character, pub u8);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ActionPointsDestroyed(pub Action, pub u8, pub bool);
+pub struct ActionPointsDestroyed(pub Action, pub i8, pub bool);

@@ -174,14 +174,14 @@ impl BatchChoiceGame {
                     .zip(points_gained)
                     .zip(Action::which_destroyed(&actions))
                     .map(|((action, points), destroyed)| {
-                        ActionPointsDestroyed(*action, points, destroyed)
+                        ActionPointsDestroyed(*action, points as i8, destroyed)
                     })
                     .collect();
 
                 for (player, &ActionPointsDestroyed(_, points, destroyed)) in
                     players.iter_mut().zip(&action_points_destroyed)
                 {
-                    player.add_points(points);
+                    player.add_points(points as u8);
                     if destroyed {
                         player.destroy_action();
                     }
@@ -195,7 +195,7 @@ impl BatchChoiceGame {
                     .zip(deductions)
                 {
                     player.deduct_points(points);
-                    apd.1 -= points;
+                    apd.1 -= points as i8;
                 }
 
                 let points_to_win = self.config.points_to_win;
@@ -571,6 +571,50 @@ mod tests {
         assert_eq!(
             Ok(expected_outcome),
             game.choose(backwards_moustachio_regenerate)
+        );
+    }
+
+    #[test]
+    fn first_player_loses_points_if_second_and_third_players_have_enough_points_to_win() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = BatchChoiceGame::new(Config {
+            points_to_win: 1,
+            player_count: 3,
+            ..Config::default()
+        });
+        let samurai_clown_zombie = BatchChoice::Characters(vec![
+            Character::Samurai,
+            Character::Clown,
+            Character::Zombie,
+        ]);
+        let atlas_backwards_regenerative = BatchChoice::Boosters(vec![
+            Booster::Atlas,
+            Booster::Backwards,
+            Booster::Regenerative,
+        ]);
+        let mirror_mirror_mirror = BatchChoice::DequeueChoices(vec![
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+        ]);
+        let earthquake_backwards_moustachio_regenerate = BatchChoice::Actions(vec![
+            Action::Move(Move::Earthquake),
+            Action::Move(Move::BackwardsMoustachio),
+            Action::Move(Move::Regenerate),
+        ]);
+        let expected_outcome = Outcome::ActionPhaseDone(vec![
+            ActionPointsDestroyed(Action::Move(Move::Earthquake), -2, false),
+            ActionPointsDestroyed(Action::Move(Move::BackwardsMoustachio), 0, false),
+            ActionPointsDestroyed(Action::Move(Move::Regenerate), 0, true),
+        ]);
+
+        game.choose(samurai_clown_zombie).unwrap();
+        game.choose(atlas_backwards_regenerative).unwrap();
+        game.choose(mirror_mirror_mirror).unwrap();
+        assert_eq!(
+            Ok(expected_outcome),
+            game.choose(earthquake_backwards_moustachio_regenerate)
         );
     }
 
