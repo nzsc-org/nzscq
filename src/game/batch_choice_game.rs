@@ -169,7 +169,7 @@ impl BatchChoiceGame {
                 Err(())
             } else {
                 let points_gained = Action::points_of(&actions);
-                let action_points_destroyed: Vec<ActionPointsDestroyed> = actions
+                let mut action_points_destroyed: Vec<ActionPointsDestroyed> = actions
                     .iter()
                     .zip(points_gained)
                     .zip(Action::which_destroyed(&actions))
@@ -189,8 +189,13 @@ impl BatchChoiceGame {
 
                 let points: Vec<u8> = players.iter().map(|p| p.points()).collect();
                 let deductions = self.config.deductions(points);
-                for (player, points) in players.iter_mut().zip(deductions) {
+                for ((player, apd), points) in players
+                    .iter_mut()
+                    .zip(action_points_destroyed.iter_mut())
+                    .zip(deductions)
+                {
                     player.deduct_points(points);
+                    apd.1 -= points;
                 }
 
                 let points_to_win = self.config.points_to_win;
@@ -208,7 +213,7 @@ impl BatchChoiceGame {
                     let dequeueing_players: Vec<DequeueChoicelessPlayer> = players
                         .into_iter()
                         .zip(&action_points_destroyed)
-                        .map(|(p, ap)| p.into_draineeless(ap.0))
+                        .map(|(p, apd)| p.into_draineeless(apd.0))
                         .collect();
                     self.phase = Phase::Dequeue(dequeueing_players);
 
@@ -504,6 +509,69 @@ mod tests {
             Phase::Final(_) => {}
             _ => panic!("Game did not end."),
         }
+    }
+
+    #[test]
+    fn game_does_not_end_if_zero_players_win() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = BatchChoiceGame::new(Config {
+            points_to_win: 2,
+            ..Config::default()
+        });
+        let ninja_zombie = BatchChoice::Characters(vec![Character::Ninja, Character::Zombie]);
+        let shadow_regenerative =
+            BatchChoice::Boosters(vec![Booster::Shadow, Booster::Regenerative]);
+        let mirror_mirror = BatchChoice::DequeueChoices(vec![
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+        ]);
+        let slip_regenerate = BatchChoice::Actions(vec![
+            Action::Move(Move::ShadowSlip),
+            Action::Move(Move::Regenerate),
+        ]);
+        let expected_outcome = Outcome::ActionPhaseDone(vec![
+            ActionPointsDestroyed(Action::Move(Move::ShadowSlip), 0, false),
+            ActionPointsDestroyed(Action::Move(Move::Regenerate), 1, true),
+        ]);
+
+        game.choose(ninja_zombie).unwrap();
+        game.choose(shadow_regenerative).unwrap();
+        game.choose(mirror_mirror).unwrap();
+        assert_eq!(Ok(expected_outcome), game.choose(slip_regenerate));
+    }
+
+    #[test]
+    fn game_does_not_end_if_multiple_players_win() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = BatchChoiceGame::new(Config {
+            points_to_win: 1,
+            ..Config::default()
+        });
+        let clown_zombie = BatchChoice::Characters(vec![Character::Clown, Character::Zombie]);
+        let backwards_regenerative =
+            BatchChoice::Boosters(vec![Booster::Backwards, Booster::Regenerative]);
+        let mirror_mirror = BatchChoice::DequeueChoices(vec![
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+        ]);
+        let backwards_moustachio_regenerate = BatchChoice::Actions(vec![
+            Action::Move(Move::BackwardsMoustachio),
+            Action::Move(Move::Regenerate),
+        ]);
+        let expected_outcome = Outcome::ActionPhaseDone(vec![
+            ActionPointsDestroyed(Action::Move(Move::BackwardsMoustachio), 0, false),
+            ActionPointsDestroyed(Action::Move(Move::Regenerate), 0, true),
+        ]);
+
+        game.choose(clown_zombie).unwrap();
+        game.choose(backwards_regenerative).unwrap();
+        game.choose(mirror_mirror).unwrap();
+        assert_eq!(
+            Ok(expected_outcome),
+            game.choose(backwards_moustachio_regenerate)
+        );
     }
 
     #[test]
