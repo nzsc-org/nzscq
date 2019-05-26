@@ -218,7 +218,7 @@ impl BatchChoiceGame {
         match &self.phase {
             Phase::Final(players) => players
                 .iter()
-                .position(|p| p.points() >= self.config.max_points),
+                .position(|p| p.points() >= self.config.points_to_win),
             _ => None,
         }
     }
@@ -470,7 +470,7 @@ mod tests {
         use crate::choices::{ArsenalItem, Move};
 
         let mut game = BatchChoiceGame::new(Config {
-            max_points: 1,
+            points_to_win: 1,
             ..Config::default()
         });
         let ninja_zombie = BatchChoice::Characters(vec![Character::Ninja, Character::Zombie]);
@@ -505,7 +505,7 @@ mod tests {
         use crate::choices::{ArsenalItem, Move};
 
         let mut game = BatchChoiceGame::new(Config {
-            max_points: 1,
+            points_to_win: 1,
             ..Config::default()
         });
         let ninja_zombie = BatchChoice::Characters(vec![Character::Ninja, Character::Zombie]);
