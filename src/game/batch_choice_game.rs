@@ -43,8 +43,8 @@ impl BatchChoiceGame {
                 BatchChoices::Booster(players.iter().map(|p| p.choices()).collect())
             }
 
-            Phase::DrainedMove(players) => {
-                BatchChoices::DrainedMove(players.iter().map(|p| p.choices()).collect())
+            Phase::Dequeue(players) => {
+                BatchChoices::Dequeue(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Action(players) => {
@@ -125,7 +125,7 @@ impl BatchChoiceGame {
             } else {
                 let dummy = vec![];
                 let players = mem::replace(players, dummy);
-                self.phase = Phase::DrainedMove(
+                self.phase = Phase::Dequeue(
                     players
                         .into_iter()
                         .zip(&boosters)
@@ -143,7 +143,7 @@ impl BatchChoiceGame {
         &mut self,
         dequeue_choices: Vec<DequeueChoice>,
     ) -> Result<Outcome, ()> {
-        if let Phase::DrainedMove(players) = &mut self.phase {
+        if let Phase::Dequeue(players) = &mut self.phase {
             if !players.can_choose(&dequeue_choices) {
                 Err(())
             } else {
@@ -204,7 +204,7 @@ impl BatchChoiceGame {
                         .zip(&action_points_destroyed)
                         .map(|(p, ap)| p.into_draineeless(ap.0))
                         .collect();
-                    self.phase = Phase::DrainedMove(dequeueing_players);
+                    self.phase = Phase::Dequeue(dequeueing_players);
 
                     Ok(Outcome::ActionPhaseDone(action_points_destroyed))
                 }

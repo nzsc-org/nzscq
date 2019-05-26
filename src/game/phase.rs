@@ -6,7 +6,7 @@ use crate::players::{
 pub(super) enum Phase {
     Character(Vec<CharacterlessPlayer>),
     Booster(Vec<BoosterlessPlayer>),
-    DrainedMove(Vec<DraineelessPlayer>),
+    Dequeue(Vec<DraineelessPlayer>),
     Action(Vec<ActionlessPlayer>),
     Final(Vec<FinishedPlayer>),
 }
