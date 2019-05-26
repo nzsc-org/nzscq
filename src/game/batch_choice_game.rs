@@ -464,4 +464,67 @@ mod tests {
             game.choose(zap_fireball)
         );
     }
+
+    #[test]
+    fn game_ends_if_exactly_one_player_wins() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = BatchChoiceGame::new(Config {
+            max_points: 1,
+            ..Config::default()
+        });
+        let ninja_zombie = BatchChoice::Characters(vec![Character::Ninja, Character::Zombie]);
+        let shadow_regenerative =
+            BatchChoice::Boosters(vec![Booster::Shadow, Booster::Regenerative]);
+        let mirror_mirror = BatchChoice::DequeueChoices(vec![
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+        ]);
+        let slip_regenerate = BatchChoice::Actions(vec![
+            Action::Move(Move::ShadowSlip),
+            Action::Move(Move::Regenerate),
+        ]);
+
+        game.choose(ninja_zombie).unwrap();
+        game.choose(shadow_regenerative).unwrap();
+        game.choose(mirror_mirror).unwrap();
+        let outcome = game.choose(slip_regenerate).unwrap();
+
+        match &outcome {
+            Outcome::GameOver(_) => {}
+            _ => panic!("Game did not end."),
+        }
+        match &game.phase {
+            Phase::Final(_) => {}
+            _ => panic!("Game did not end."),
+        }
+    }
+
+    #[test]
+    fn players_cannot_choose_if_game_ends() {
+        use crate::choices::{ArsenalItem, Move};
+
+        let mut game = BatchChoiceGame::new(Config {
+            max_points: 1,
+            ..Config::default()
+        });
+        let ninja_zombie = BatchChoice::Characters(vec![Character::Ninja, Character::Zombie]);
+        let shadow_regenerative =
+            BatchChoice::Boosters(vec![Booster::Shadow, Booster::Regenerative]);
+        let mirror_mirror = BatchChoice::DequeueChoices(vec![
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+            DequeueChoice::DrainAndExit(ArsenalItem::Mirror),
+        ]);
+        let slip_regenerate = BatchChoice::Actions(vec![
+            Action::Move(Move::ShadowSlip),
+            Action::Move(Move::Regenerate),
+        ]);
+
+        game.choose(ninja_zombie).unwrap();
+        game.choose(shadow_regenerative).unwrap();
+        game.choose(mirror_mirror.clone()).unwrap();
+        game.choose(slip_regenerate).unwrap();
+
+        assert!(game.choose(mirror_mirror).is_err());
+    }
 }
