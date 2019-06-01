@@ -21,9 +21,9 @@ impl BatchChoice {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum BatchChoices {
-    Character(Vec<Vec<Character>>),
-    Booster(Vec<Vec<Booster>>),
-    Dequeue(Vec<Vec<DequeueChoice>>),
-    Action(Vec<Vec<Action>>),
+    Characters(Vec<Vec<Character>>),
+    Boosters(Vec<Vec<Booster>>),
+    Dequeues(Vec<Vec<DequeueChoice>>),
+    Actions(Vec<Vec<Action>>),
     None,
 }

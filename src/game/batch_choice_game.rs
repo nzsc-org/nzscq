@@ -36,19 +36,19 @@ impl BatchChoiceGame {
     pub fn choices(&self) -> BatchChoices {
         match &self.phase {
             Phase::Character(players) => {
-                BatchChoices::Character(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::Characters(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Booster(players) => {
-                BatchChoices::Booster(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::Boosters(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Dequeue(players) => {
-                BatchChoices::Dequeue(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::Dequeues(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Action(players) => {
-                BatchChoices::Action(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::Actions(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Final(_) => BatchChoices::None,
@@ -263,7 +263,7 @@ mod tests {
     fn all_players_can_initially_choose_any_character() {
         let game = BatchChoiceGame::default();
         assert_eq!(
-            BatchChoices::Character(vec![Character::all(), Character::all()]),
+            BatchChoices::Characters(vec![Character::all(), Character::all()]),
             game.choices()
         );
     }
@@ -323,7 +323,7 @@ mod tests {
         let mut no_samurai = Character::all();
         no_samurai.retain(|c| c != &Character::Samurai);
         assert_eq!(
-            BatchChoices::Character(vec![
+            BatchChoices::Characters(vec![
                 no_ninja.clone(),
                 no_ninja,
                 no_samurai,
