@@ -11,7 +11,6 @@ pub struct ActionlessPlayer {
     pub(super) booster: Booster,
     pub(super) arsenal: Vec<ArsenalItem>,
     pub(super) queue: Queue,
-    pub(super) action_destroyed: bool,
 }
 
 impl ActionlessPlayer {
@@ -31,17 +30,17 @@ impl ActionlessPlayer {
         }
     }
 
-    pub fn destroy_action(&mut self) {
-        self.action_destroyed = true;
-    }
-
-    pub fn into_draineeless(mut self, action: Action) -> DequeueChoicelessPlayer {
+    pub fn into_draineeless(
+        mut self,
+        action: Action,
+        action_destroyed: bool,
+    ) -> DequeueChoicelessPlayer {
         let arsenal_item = action.into_opt_arsenal_item();
         if let Some(arsenal_item) = &arsenal_item {
             self.arsenal.retain(|m| m != arsenal_item);
         }
 
-        if !self.action_destroyed {
+        if !action_destroyed {
             self.queue.enqueue(arsenal_item);
         }
 
@@ -136,7 +135,7 @@ mod tests {
             ),
         ];
         for (action, dequeue_choice) in choices {
-            draineeless_shadow = actionless_shadow.into_draineeless(action);
+            draineeless_shadow = actionless_shadow.into_draineeless(action, false);
             actionless_shadow = draineeless_shadow.into_actionless(dequeue_choice);
         }
 
@@ -181,14 +180,15 @@ mod tests {
     fn into_draineeless_works_if_action_destroyed() {
         use crate::choices::Move;
 
-        let mut shadow = actionless_shadow();
-        shadow.destroy_action();
+        let shadow = actionless_shadow();
 
         let expected_queue = shadow.queue.clone();
 
         assert_eq!(
             expected_queue,
-            shadow.into_draineeless(Action::Move(Move::Kick)).queue
+            shadow
+                .into_draineeless(Action::Move(Move::Kick), true)
+                .queue
         );
     }
 
@@ -206,7 +206,9 @@ mod tests {
 
         assert_eq!(
             expected_queue,
-            shadow.into_draineeless(Action::Move(Move::Kick)).queue
+            shadow
+                .into_draineeless(Action::Move(Move::Kick), false)
+                .queue
         );
     }
 

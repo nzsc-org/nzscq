@@ -178,13 +178,10 @@ impl BatchChoiceGame {
                     })
                     .collect();
 
-                for (player, &ActionPointsDestroyed(_, points, destroyed)) in
+                for (player, &ActionPointsDestroyed(_, points, _)) in
                     players.iter_mut().zip(&action_points_destroyed)
                 {
                     player.add_points(points as u8);
-                    if destroyed {
-                        player.destroy_action();
-                    }
                 }
 
                 let points: Vec<u8> = players.iter().map(|p| p.points()).collect();
@@ -213,7 +210,7 @@ impl BatchChoiceGame {
                     let dequeueing_players: Vec<DequeueChoicelessPlayer> = players
                         .into_iter()
                         .zip(&action_points_destroyed)
-                        .map(|(p, apd)| p.into_draineeless(apd.0))
+                        .map(|(p, apd)| p.into_draineeless(apd.0, apd.2))
                         .collect();
                     self.phase = Phase::Dequeue(dequeueing_players);
 

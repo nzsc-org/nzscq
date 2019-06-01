@@ -26,7 +26,6 @@ impl DequeueChoicelessPlayer {
             booster: self.booster,
             arsenal: self.arsenal,
             queue: self.queue,
-            action_destroyed: false,
         }
     }
 
