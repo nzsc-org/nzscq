@@ -62,7 +62,7 @@ mod tests {
         let player = CharacterlessPlayer::from_game_config(Config::default());
         player
             .into_boosterless(Character::Ninja)
-            .into_draineeless(Booster::Shadow)
+            .into_dequeue_choiceless(Booster::Shadow)
     }
 
     #[test]

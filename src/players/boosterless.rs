@@ -11,7 +11,7 @@ pub struct BoosterlessPlayer {
 }
 
 impl BoosterlessPlayer {
-    pub fn into_draineeless(self, booster: Booster) -> DequeueChoicelessPlayer {
+    pub fn into_dequeue_choiceless(self, booster: Booster) -> DequeueChoicelessPlayer {
         let arsenal = self.initial_arsenal(booster);
 
         DequeueChoicelessPlayer {
@@ -126,7 +126,7 @@ mod tests {
         let player = ninja();
         assert_eq!(
             Booster::Shadow,
-            player.into_draineeless(Booster::Shadow).booster
+            player.into_dequeue_choiceless(Booster::Shadow).booster
         );
     }
 }

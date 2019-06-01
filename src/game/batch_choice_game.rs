@@ -129,7 +129,7 @@ impl BatchChoiceGame {
                     players
                         .into_iter()
                         .zip(&boosters)
-                        .map(|(player, booster)| player.into_draineeless(*booster))
+                        .map(|(player, booster)| player.into_dequeue_choiceless(*booster))
                         .collect(),
                 );
                 Ok(Outcome::BoosterPhaseDone(boosters))
@@ -210,7 +210,7 @@ impl BatchChoiceGame {
                     let dequeueing_players: Vec<DequeueChoicelessPlayer> = players
                         .into_iter()
                         .zip(&action_points_destroyed)
-                        .map(|(p, apd)| p.into_draineeless(apd.clone()))
+                        .map(|(p, apd)| p.into_dequeue_choiceless(apd.clone()))
                         .collect();
                     self.phase = Phase::Dequeue(dequeueing_players);
 

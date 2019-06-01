@@ -19,7 +19,7 @@ impl ActionlessPlayer {
         self.points
     }
 
-    pub fn into_draineeless(
+    pub fn into_dequeue_choiceless(
         mut self,
         ActionPointsDestroyed(action, points, action_destroyed): ActionPointsDestroyed,
     ) -> DequeueChoicelessPlayer {
@@ -113,7 +113,7 @@ mod tests {
         let player = CharacterlessPlayer::from_game_config(Config::default());
         player
             .into_boosterless(Character::Ninja)
-            .into_draineeless(Booster::Shadow)
+            .into_dequeue_choiceless(Booster::Shadow)
     }
 
     #[test]
@@ -139,7 +139,7 @@ mod tests {
         ];
         for (action, dequeue_choice) in choices {
             draineeless_shadow =
-                actionless_shadow.into_draineeless(ActionPointsDestroyed(action, 0, false));
+                actionless_shadow.into_dequeue_choiceless(ActionPointsDestroyed(action, 0, false));
             actionless_shadow = draineeless_shadow.into_actionless(dequeue_choice);
         }
 
@@ -189,7 +189,7 @@ mod tests {
         assert_eq!(
             expected_queue,
             shadow
-                .into_draineeless(ActionPointsDestroyed(Action::Move(Move::Kick), 0, true))
+                .into_dequeue_choiceless(ActionPointsDestroyed(Action::Move(Move::Kick), 0, true))
                 .queue
         );
     }
@@ -209,7 +209,7 @@ mod tests {
         assert_eq!(
             expected_queue,
             shadow
-                .into_draineeless(ActionPointsDestroyed(Action::Move(Move::Kick), 0, false))
+                .into_dequeue_choiceless(ActionPointsDestroyed(Action::Move(Move::Kick), 0, false))
                 .queue
         );
     }
@@ -220,7 +220,7 @@ mod tests {
 
         let actionless = actionless_shadow();
         let apd = ActionPointsDestroyed(Action::Move(Move::Kick), 0, false);
-        let expected = actionless.clone().into_draineeless(apd.clone());
+        let expected = actionless.clone().into_dequeue_choiceless(apd.clone());
         let finished = actionless.into_finished(apd);
 
         assert_eq!(expected.game_config, finished.game_config);
