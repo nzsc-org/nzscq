@@ -178,30 +178,30 @@ impl BatchChoiceGame {
                     })
                     .collect();
 
-                for (player, &ActionPointsDestroyed(_, points, _)) in
-                    players.iter_mut().zip(&action_points_destroyed)
-                {
-                    player.add_points(points as u8);
-                }
-
-                let points: Vec<u8> = players.iter().map(|p| p.points()).collect();
+                let points: Vec<u8> = players
+                    .iter()
+                    .zip(&action_points_destroyed)
+                    .map(|(player, apd)| player.points() + apd.1 as u8)
+                    .collect();
                 let deductions = self.config.deductions(points);
-                for ((player, apd), points) in players
-                    .iter_mut()
-                    .zip(action_points_destroyed.iter_mut())
-                    .zip(deductions)
-                {
-                    player.deduct_points(points);
+                for (apd, points) in action_points_destroyed.iter_mut().zip(deductions) {
                     apd.1 -= points as i8;
                 }
 
                 let points_to_win = self.config.points_to_win;
-                let have_any_won = players.iter().any(|p| p.points() == points_to_win);
+                let mut new_points = players
+                    .iter()
+                    .zip(&action_points_destroyed)
+                    .map(|(player, apd)| player.points() as i8 + apd.1);
+                let have_any_won = new_points.any(|p| p == points_to_win as i8);
                 if have_any_won {
                     let dummy = vec![];
                     let players = mem::replace(players, dummy);
-                    let finished_players: Vec<FinishedPlayer> =
-                        players.into_iter().map(|p| p.into_finished()).collect();
+                    let finished_players: Vec<FinishedPlayer> = players
+                        .into_iter()
+                        .zip(action_points_destroyed)
+                        .map(|(player, apd)| player.into_finished(apd))
+                        .collect();
                     self.phase = Phase::Final(finished_players.clone());
                     Ok(Outcome::GameOver(finished_players))
                 } else {
@@ -210,7 +210,7 @@ impl BatchChoiceGame {
                     let dequeueing_players: Vec<DequeueChoicelessPlayer> = players
                         .into_iter()
                         .zip(&action_points_destroyed)
-                        .map(|(p, apd)| p.into_draineeless(apd.0, apd.2))
+                        .map(|(p, apd)| p.into_draineeless(apd.clone()))
                         .collect();
                     self.phase = Phase::Dequeue(dequeueing_players);
 
@@ -673,6 +673,7 @@ mod tests {
         game.choose(shadow_regenerative).unwrap();
         game.choose(mirror_mirror).unwrap();
         game.choose(slip_regenerate).unwrap();
+        println!("{:#?}", game);
         assert_eq!(Some(1), game.winner_index());
     }
 }

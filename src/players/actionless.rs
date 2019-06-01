@@ -2,6 +2,7 @@ use super::{DequeueChoicelessPlayer, FinishedPlayer};
 use crate::choices::{Action, ArsenalItem, Booster, Character, Choose};
 use crate::counters::Queue;
 use crate::game::Config;
+use crate::outcomes::ActionPointsDestroyed;
 
 #[derive(Debug, Clone)]
 pub struct ActionlessPlayer {
@@ -18,31 +19,12 @@ impl ActionlessPlayer {
         self.points
     }
 
-    pub fn add_points(&mut self, points: u8) {
-        self.points += points;
-    }
-
-    pub fn deduct_points(&mut self, points: u8) {
-        if self.points < points {
-            self.points = 0;
-        } else {
-            self.points -= points;
-        }
-    }
-
     pub fn into_draineeless(
         mut self,
-        action: Action,
-        action_destroyed: bool,
+        ActionPointsDestroyed(action, points, action_destroyed): ActionPointsDestroyed,
     ) -> DequeueChoicelessPlayer {
-        let arsenal_item = action.into_opt_arsenal_item();
-        if let Some(arsenal_item) = &arsenal_item {
-            self.arsenal.retain(|m| m != arsenal_item);
-        }
-
-        if !action_destroyed {
-            self.queue.enqueue(arsenal_item);
-        }
+        self.use_action(action, action_destroyed);
+        self.add_points(points);
 
         DequeueChoicelessPlayer {
             game_config: self.game_config,
@@ -54,7 +36,13 @@ impl ActionlessPlayer {
         }
     }
 
-    pub fn into_finished(self) -> FinishedPlayer {
+    pub fn into_finished(
+        mut self,
+        ActionPointsDestroyed(action, points, action_destroyed): ActionPointsDestroyed,
+    ) -> FinishedPlayer {
+        self.use_action(action, action_destroyed);
+        self.add_points(points);
+
         FinishedPlayer {
             game_config: self.game_config,
             points: self.points,
@@ -63,6 +51,21 @@ impl ActionlessPlayer {
             arsenal: self.arsenal,
             queue: self.queue,
         }
+    }
+
+    fn use_action(&mut self, action: Action, action_destroyed: bool) {
+        let arsenal_item = action.into_opt_arsenal_item();
+        if let Some(arsenal_item) = &arsenal_item {
+            self.arsenal.retain(|m| m != arsenal_item);
+        }
+        if !action_destroyed {
+            self.queue.enqueue(arsenal_item);
+        }
+    }
+
+    fn add_points(&mut self, points: i8) {
+        let new_points = self.points as i8 + points;
+        self.points = if new_points < 0 { 0 } else { new_points as u8 };
     }
 }
 
@@ -135,7 +138,8 @@ mod tests {
             ),
         ];
         for (action, dequeue_choice) in choices {
-            draineeless_shadow = actionless_shadow.into_draineeless(action, false);
+            draineeless_shadow =
+                actionless_shadow.into_draineeless(ActionPointsDestroyed(action, 0, false));
             actionless_shadow = draineeless_shadow.into_actionless(dequeue_choice);
         }
 
@@ -151,28 +155,26 @@ mod tests {
     }
 
     #[test]
-    fn add_points_works() {
+    fn add_points_adds_points_if_new_points_is_greater_than_zero() {
         let mut shadow = actionless_shadow();
-        assert_eq!(0, shadow.points);
+        shadow.points = 0;
         shadow.add_points(3);
         assert_eq!(3, shadow.points);
     }
 
     #[test]
-    fn deduct_points_deducts_if_player_has_enough_points() {
+    fn add_points_adds_points_if_new_points_is_equal_to_zero() {
         let mut shadow = actionless_shadow();
+        shadow.points = 3;
+        shadow.add_points(-3);
         assert_eq!(0, shadow.points);
-        shadow.add_points(3);
-        shadow.deduct_points(2);
-        assert_eq!(1, shadow.points);
     }
 
     #[test]
-    fn deduct_points_sets_points_to_zero_if_player_does_not_have_enough_points() {
+    fn add_points_sets_points_to_zero_if_new_points_is_less_than_zero() {
         let mut shadow = actionless_shadow();
-        assert_eq!(0, shadow.points);
-        shadow.add_points(3);
-        shadow.deduct_points(5);
+        shadow.points = 3;
+        shadow.add_points(-4);
         assert_eq!(0, shadow.points);
     }
 
@@ -187,7 +189,7 @@ mod tests {
         assert_eq!(
             expected_queue,
             shadow
-                .into_draineeless(Action::Move(Move::Kick), true)
+                .into_draineeless(ActionPointsDestroyed(Action::Move(Move::Kick), 0, true))
                 .queue
         );
     }
@@ -207,19 +209,24 @@ mod tests {
         assert_eq!(
             expected_queue,
             shadow
-                .into_draineeless(Action::Move(Move::Kick), false)
+                .into_draineeless(ActionPointsDestroyed(Action::Move(Move::Kick), 0, false))
                 .queue
         );
     }
 
     #[test]
     fn into_finished_works() {
-        let original = actionless_shadow();
-        let finished = original.clone().into_finished();
-        assert_eq!(original.game_config, finished.game_config);
-        assert_eq!(original.points, finished.points);
-        assert_eq!(original.character, finished.character);
-        assert_eq!(original.booster, finished.booster);
-        assert_eq!(original.arsenal, finished.arsenal);
+        use crate::choices::Move;
+
+        let actionless = actionless_shadow();
+        let apd = ActionPointsDestroyed(Action::Move(Move::Kick), 0, false);
+        let expected = actionless.clone().into_draineeless(apd.clone());
+        let finished = actionless.into_finished(apd);
+
+        assert_eq!(expected.game_config, finished.game_config);
+        assert_eq!(expected.points, finished.points);
+        assert_eq!(expected.character, finished.character);
+        assert_eq!(expected.booster, finished.booster);
+        assert_eq!(expected.arsenal, finished.arsenal);
     }
 }
