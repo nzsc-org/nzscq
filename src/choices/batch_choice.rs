@@ -23,7 +23,7 @@ impl BatchChoice {
 pub enum BatchChoices {
     Characters(Vec<Vec<Character>>),
     Boosters(Vec<Vec<Booster>>),
-    Dequeues(Vec<Vec<DequeueChoice>>),
+    DequeueChoices(Vec<Vec<DequeueChoice>>),
     Actions(Vec<Vec<Action>>),
     None,
 }

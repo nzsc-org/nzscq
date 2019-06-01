@@ -44,7 +44,7 @@ impl BatchChoiceGame {
             }
 
             Phase::Dequeue(players) => {
-                BatchChoices::Dequeues(players.iter().map(|p| p.choices()).collect())
+                BatchChoices::DequeueChoices(players.iter().map(|p| p.choices()).collect())
             }
 
             Phase::Action(players) => {
