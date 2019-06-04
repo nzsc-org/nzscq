@@ -91,7 +91,7 @@ impl Choose<Action> for ActionlessPlayer {
                 .collect();
             actions.extend(mirror_actions);
         }
-        if actions.len() == 0 {
+        if actions.is_empty() {
             actions.push(Action::Concede);
         }
 

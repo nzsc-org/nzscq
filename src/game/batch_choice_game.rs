@@ -77,7 +77,7 @@ impl BatchChoiceGame {
             if !players.can_choose(&characters) {
                 Err(())
             } else if characters.has_duplicates() {
-                for (player, character) in players.into_iter().zip(&characters) {
+                for (player, character) in players.iter_mut().zip(&characters) {
                     player.add_to_streak(*character);
                 }
                 Ok(Outcome::CharacterPhaseRechoose(characters))

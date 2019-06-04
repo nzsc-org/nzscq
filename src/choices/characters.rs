@@ -66,10 +66,10 @@ impl FromStr for Character {
 impl Display for Character {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let string = match self {
-            &Character::Ninja => "Ninja",
-            &Character::Zombie => "Zombie",
-            &Character::Samurai => "Samurai",
-            &Character::Clown => "Clown",
+            Character::Ninja => "Ninja",
+            Character::Zombie => "Zombie",
+            Character::Samurai => "Samurai",
+            Character::Clown => "Clown",
         };
 
         write!(f, "{}", string)
@@ -96,11 +96,7 @@ mod tests {
     fn ninja_zombie_samurai_headstarts_equals_1_0_0() {
         assert_eq!(
             vec![1, 0, 0],
-            Character::points_of(&vec![
-                Character::Ninja,
-                Character::Zombie,
-                Character::Samurai
-            ])
+            Character::points_of(&[Character::Ninja, Character::Zombie, Character::Samurai])
         );
     }
 
@@ -108,7 +104,7 @@ mod tests {
     fn points_of_ninja_zombie_samurai_clown_equals_1_0_1_1() {
         assert_eq!(
             vec![1, 0, 1, 1],
-            Character::points_of(&vec![
+            Character::points_of(&[
                 Character::Ninja,
                 Character::Zombie,
                 Character::Samurai,

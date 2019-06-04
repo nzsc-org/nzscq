@@ -9,10 +9,11 @@ pub struct Config {
 impl Config {
     pub(super) fn deductions(&self, points: Vec<u8>) -> Vec<u8> {
         if let Some(max_points) = points.iter().max() {
-            if max_points < &self.points_to_win {
+            if *max_points < self.points_to_win {
                 vec![0; points.len()]
             } else {
                 let diff = max_points - self.points_to_win;
+                #[allow(clippy::naive_bytecount)]
                 let tie_exists = points.iter().filter(|p| p == &max_points).count() > 1;
                 if tie_exists {
                     vec![diff + 1; points.len()]

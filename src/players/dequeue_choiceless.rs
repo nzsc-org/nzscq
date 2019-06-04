@@ -42,7 +42,7 @@ impl Choose<DequeueChoice> for DequeueChoicelessPlayer {
                 .queue
                 .pool()
                 .iter()
-                .map(|item| DequeueChoice::DrainAndExit(item.clone()))
+                .map(|item| DequeueChoice::DrainAndExit(*item))
                 .collect();
             items.push(DequeueChoice::JustExit);
             items.push(DequeueChoice::Decline);

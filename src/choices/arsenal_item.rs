@@ -7,17 +7,17 @@ pub enum ArsenalItem {
 }
 
 impl ArsenalItem {
-    pub(crate) fn as_move_action(&self) -> Option<Action> {
-        if let ArsenalItem::Move(m) = &self {
-            Some(Action::Move(*m))
+    pub(crate) fn as_move_action(self) -> Option<Action> {
+        if let ArsenalItem::Move(m) = self {
+            Some(Action::Move(m))
         } else {
             None
         }
     }
 
-    pub(crate) fn as_mirror_action(&self) -> Option<Action> {
-        if let ArsenalItem::Move(m) = &self {
-            Some(Action::Mirror(*m))
+    pub(crate) fn as_mirror_action(self) -> Option<Action> {
+        if let ArsenalItem::Move(m) = self {
+            Some(Action::Mirror(m))
         } else {
             None
         }

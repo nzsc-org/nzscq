@@ -8,7 +8,7 @@ pub enum Action {
 }
 
 impl Action {
-    pub(crate) fn which_destroyed(actions: &Vec<Action>) -> Vec<bool> {
+    pub(crate) fn which_destroyed(actions: &[Action]) -> Vec<bool> {
         let was_destructive_used = actions.iter().any(|a| a.is_destructive());
 
         actions
@@ -25,19 +25,19 @@ impl Action {
         }
     }
 
-    fn move_(&self) -> Option<Move> {
+    fn move_(self) -> Option<Move> {
         match self {
-            Action::Mirror(m) => Some(*m),
-            Action::Move(m) => Some(*m),
+            Action::Mirror(m) => Some(m),
+            Action::Move(m) => Some(m),
             Action::Concede => None,
         }
     }
 
-    fn is_destructive(&self) -> bool {
+    fn is_destructive(self) -> bool {
         self.move_().map(|m| m.is_destructive()).unwrap_or(false)
     }
 
-    fn is_single_use(&self) -> bool {
+    fn is_single_use(self) -> bool {
         self.move_().map(|m| m.is_single_use()).unwrap_or(false)
     }
 }

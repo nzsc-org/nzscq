@@ -17,6 +17,15 @@ impl BatchChoice {
             BatchChoice::Actions(actions) => actions.len(),
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            BatchChoice::Characters(characters) => characters.is_empty(),
+            BatchChoice::Boosters(boosters) => boosters.is_empty(),
+            BatchChoice::DequeueChoices(dequeue_choices) => dequeue_choices.is_empty(),
+            BatchChoice::Actions(actions) => actions.is_empty(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

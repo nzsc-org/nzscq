@@ -33,13 +33,10 @@ impl Booster {
     }
 
     pub fn replace_moves(self, moves: &mut Vec<Move>) {
-        match self {
-            Booster::Strong => {
-                moves.retain(|m| m != &Move::Smash);
-                moves.push(Move::StrongSmash);
-            }
-            _ => {}
-        };
+        if let Booster::Strong = self {
+            moves.retain(|m| m != &Move::Smash);
+            moves.push(Move::StrongSmash);
+        }
     }
 }
 
@@ -65,15 +62,15 @@ impl FromStr for Booster {
 impl Display for Booster {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let string = match self {
-            &Booster::Shadow => "Shadow",
-            &Booster::Speedy => "Speedy",
-            &Booster::Regenerative => "Regenerative",
-            &Booster::ZombieCorps => "Zombie Corps",
-            &Booster::Atlas => "Atlas",
-            &Booster::Strong => "Strong",
-            &Booster::Backwards => "Backwards",
-            &Booster::Moustachio => "Moustachio",
-            &Booster::None => "No Booster",
+            Booster::Shadow => "Shadow",
+            Booster::Speedy => "Speedy",
+            Booster::Regenerative => "Regenerative",
+            Booster::ZombieCorps => "Zombie Corps",
+            Booster::Atlas => "Atlas",
+            Booster::Strong => "Strong",
+            Booster::Backwards => "Backwards",
+            Booster::Moustachio => "Moustachio",
+            Booster::None => "No Booster",
         };
 
         write!(f, "{}", string)

@@ -50,7 +50,7 @@ where
 
 pub trait PointsAgainst: Sized {
     fn points_against(&self, other: &Self) -> u8;
-    fn points_of(choices: &Vec<Self>) -> Vec<u8> {
+    fn points_of(choices: &[Self]) -> Vec<u8> {
         let mut points = vec![0; choices.len()];
         for (i, a) in choices.iter().enumerate() {
             for b in choices {
@@ -99,7 +99,7 @@ mod tests {
     fn points_of_rock_rock_paper_scissors_are_1_1_2_1() {
         assert_eq!(
             vec![1, 1, 2, 1],
-            RPS::points_of(&vec![RPS::Rock, RPS::Rock, RPS::Paper, RPS::Scissors])
+            RPS::points_of(&[RPS::Rock, RPS::Rock, RPS::Paper, RPS::Scissors])
         );
     }
 

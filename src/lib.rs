@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+
 pub mod choices;
 pub mod game;
 pub mod outcomes;

@@ -120,7 +120,7 @@ mod tests {
         assert_eq!(
             original
                 .streak
-                .map(|streak| Into::<transparent::CharacterStreak>::into(streak)),
+                .map(Into::<transparent::CharacterStreak>::into),
             transparent.streak
         );
     }

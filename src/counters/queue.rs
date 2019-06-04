@@ -57,10 +57,7 @@ impl Queue {
     }
 
     pub fn exit_vacant(&self) -> bool {
-        match self.exit {
-            None => true,
-            Some(_) => false,
-        }
+        self.exit.is_none()
     }
 }
 
