@@ -38,6 +38,40 @@ pub enum Move {
 }
 
 impl Move {
+    pub fn all() -> Vec<Move> {
+        vec![
+            Move::Kick,
+            Move::NinjaSword,
+            Move::Nunchucks,
+            Move::ShadowFireball,
+            Move::ShadowSlip,
+            Move::RunInCircles,
+            Move::LightningFastKarateChop,
+            Move::Rampage,
+            Move::Muscle,
+            Move::Zap,
+            Move::Regenerate,
+            Move::Gravedigger,
+            Move::ZombieCorps,
+            Move::Apocalypse,
+            Move::SamuraiSword,
+            Move::Helmet,
+            Move::Smash,
+            Move::StrongSmash,
+            Move::Lightning,
+            Move::Earthquake,
+            Move::Twist,
+            Move::Bend,
+            Move::JugglingKnives,
+            Move::AcidSpray,
+            Move::Nose,
+            Move::BackwardsMoustachio,
+            Move::NoseOfTheTaunted,
+            Move::MustacheMash,
+            Move::BigHairyDeal,
+        ]
+    }
+
     pub fn is_destructive(self) -> bool {
         DESTRUCTIVE_MOVES.contains(&self)
     }

@@ -18,6 +18,20 @@ pub enum Booster {
 }
 
 impl Booster {
+    pub fn all() -> Vec<Booster> {
+        vec![
+            Booster::Shadow,
+            Booster::Speedy,
+            Booster::Regenerative,
+            Booster::ZombieCorps,
+            Booster::Atlas,
+            Booster::Strong,
+            Booster::Backwards,
+            Booster::Moustachio,
+            Booster::None,
+        ]
+    }
+
     pub fn moves(self) -> Vec<Move> {
         match self {
             Booster::Shadow => vec![Move::ShadowFireball, Move::ShadowSlip],
