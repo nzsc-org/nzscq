@@ -3,6 +3,7 @@ use crate::choices::{Action, ArsenalItem, Booster, Character, Choose};
 use crate::counters::Queue;
 use crate::game::Config;
 use crate::outcomes::ActionPointsDestroyed;
+use crate::scoreboard::transparent;
 
 #[derive(Debug, Clone)]
 pub struct ActionlessPlayer {
@@ -98,6 +99,18 @@ impl Choose<Action> for ActionlessPlayer {
     }
 }
 
+impl Into<transparent::ActionlessPlayer> for ActionlessPlayer {
+    fn into(self) -> transparent::ActionlessPlayer {
+        transparent::ActionlessPlayer {
+            points: self.points,
+            character: self.character,
+            booster: self.booster,
+            arsenal: self.arsenal,
+            queue: self.queue.into(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -110,9 +123,11 @@ mod tests {
     }
 
     fn draineeless_shadow() -> DequeueChoicelessPlayer {
+        use crate::outcomes::CharacterHeadstart;
+
         let player = CharacterlessPlayer::from_game_config(Config::default());
         player
-            .into_boosterless(Character::Ninja)
+            .into_boosterless(CharacterHeadstart(Character::Ninja, 0))
             .into_dequeue_choiceless(Booster::Shadow)
     }
 
@@ -228,5 +243,21 @@ mod tests {
         assert_eq!(expected.character, finished.character);
         assert_eq!(expected.booster, finished.booster);
         assert_eq!(expected.arsenal, finished.arsenal);
+        assert_eq!(expected.queue, finished.queue);
+    }
+
+    #[test]
+    fn into_transparent_works() {
+        let original = actionless_shadow();
+        let transparent: transparent::ActionlessPlayer = original.clone().into();
+
+        assert_eq!(original.points, transparent.points);
+        assert_eq!(original.character, transparent.character);
+        assert_eq!(original.booster, transparent.booster);
+        assert_eq!(original.arsenal, transparent.arsenal);
+        assert_eq!(
+            Into::<transparent::Queue>::into(original.queue),
+            transparent.queue
+        );
     }
 }

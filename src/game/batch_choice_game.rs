@@ -7,6 +7,7 @@ use crate::{
     helpers::HasDuplicates,
     outcomes::{ActionPointsDestroyed, CharacterHeadstart, Outcome},
     players::{CharacterlessPlayer, DequeueChoicelessPlayer, FinishedPlayer},
+    scoreboard::Scoreboard,
 };
 
 use std::mem;
@@ -93,7 +94,7 @@ impl BatchChoiceGame {
 
     fn complete_character_phase(
         &mut self,
-        mut players: Vec<CharacterlessPlayer>,
+        players: Vec<CharacterlessPlayer>,
         characters: Vec<Character>,
     ) -> Outcome {
         let headstarts = Character::points_of(&characters);
@@ -103,15 +104,11 @@ impl BatchChoiceGame {
             .map(|(character, headstart)| CharacterHeadstart(*character, headstart))
             .collect();
 
-        for (player, headstart) in players.iter_mut().zip(&character_headstarts) {
-            player.add_points(headstart.1);
-        }
-
         self.phase = Phase::Booster(
             players
                 .into_iter()
-                .zip(characters)
-                .map(|(p, c)| p.into_boosterless(c))
+                .zip(&character_headstarts)
+                .map(|(p, ch)| p.into_boosterless(ch.clone()))
                 .collect(),
         );
 
@@ -226,9 +223,13 @@ impl BatchChoiceGame {
         match &self.phase {
             Phase::Final(players) => players
                 .iter()
-                .position(|p| p.points() >= self.config.points_to_win),
+                .position(|p| p.points >= self.config.points_to_win),
             _ => None,
         }
+    }
+
+    pub fn scoreboard(&self) -> Scoreboard {
+        self.phase.clone().into()
     }
 }
 

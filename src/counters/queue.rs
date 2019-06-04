@@ -1,4 +1,7 @@
-use crate::choices::{ArsenalItem, DequeueChoice};
+use crate::{
+    choices::{ArsenalItem, DequeueChoice},
+    scoreboard::transparent,
+};
 
 use std::collections::HashMap;
 
@@ -57,6 +60,16 @@ impl Queue {
         match self.exit {
             None => true,
             Some(_) => false,
+        }
+    }
+}
+
+impl Into<transparent::Queue> for Queue {
+    fn into(self) -> transparent::Queue {
+        transparent::Queue {
+            entrance: self.entrance,
+            pool: self.pool.items,
+            exit: self.exit,
         }
     }
 }
@@ -275,5 +288,14 @@ mod tests {
         };
         assert!(a != b);
         assert!(b != a);
+    }
+
+    #[test]
+    fn into_transparent_works() {
+        let original = Queue::new();
+        let transparent: transparent::Queue = original.clone().into();
+        assert_eq!(original.entrance, transparent.entrance);
+        assert_eq!(original.pool.items, transparent.pool);
+        assert_eq!(original.exit, transparent.exit);
     }
 }

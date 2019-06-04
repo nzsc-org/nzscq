@@ -2,12 +2,13 @@ use super::BoosterlessPlayer;
 use crate::choices::{Character, Choose};
 use crate::counters::{CharacterChoices, CharacterStreak};
 use crate::game::Config;
+use crate::outcomes::CharacterHeadstart;
+use crate::scoreboard::transparent;
 
 #[derive(Debug, Clone)]
 pub struct CharacterlessPlayer {
     game_config: Config,
     streak: Option<CharacterStreak>,
-    points: u8,
 }
 
 impl CharacterlessPlayer {
@@ -15,12 +16,7 @@ impl CharacterlessPlayer {
         Self {
             game_config,
             streak: None,
-            points: 0,
         }
-    }
-
-    pub fn add_points(&mut self, points: u8) {
-        self.points += points;
     }
 
     pub fn add_to_streak(&mut self, character: Character) {
@@ -29,10 +25,13 @@ impl CharacterlessPlayer {
             .unwrap();
     }
 
-    pub fn into_boosterless(self, character: Character) -> BoosterlessPlayer {
+    pub fn into_boosterless(
+        self,
+        CharacterHeadstart(character, headstart): CharacterHeadstart,
+    ) -> BoosterlessPlayer {
         BoosterlessPlayer {
             game_config: self.game_config,
-            points: self.points,
+            points: headstart,
             character,
         }
     }
@@ -42,6 +41,14 @@ impl Choose<Character> for CharacterlessPlayer {
     fn choices(&self) -> Vec<Character> {
         self.streak
             .choices(self.game_config.max_character_repetitions)
+    }
+}
+
+impl Into<transparent::CharacterlessPlayer> for CharacterlessPlayer {
+    fn into(self) -> transparent::CharacterlessPlayer {
+        transparent::CharacterlessPlayer {
+            streak: self.streak.map(|streak| streak.into()),
+        }
     }
 }
 
@@ -56,19 +63,9 @@ mod tests {
         let expected = CharacterlessPlayer {
             game_config: Config::default(),
             streak: None,
-            points: 0,
         };
         assert_eq!(expected.game_config, actual.game_config);
         assert_eq!(expected.streak, actual.streak);
-        assert_eq!(expected.points, actual.points);
-    }
-
-    #[test]
-    fn add_points_works() {
-        let mut player = CharacterlessPlayer::from_game_config(Config::default());
-        assert_eq!(0, player.points);
-        player.add_points(3);
-        assert_eq!(3, player.points);
     }
 
     #[test]
@@ -109,7 +106,22 @@ mod tests {
         let player = CharacterlessPlayer::from_game_config(Config::default());
         assert_eq!(
             Character::Ninja,
-            player.into_boosterless(Character::Ninja).character
+            player
+                .into_boosterless(CharacterHeadstart(Character::Ninja, 0))
+                .character
+        );
+    }
+
+    #[test]
+    fn into_transparent_works() {
+        let original = CharacterlessPlayer::from_game_config(Config::default());
+        let transparent: transparent::CharacterlessPlayer = original.clone().into();
+
+        assert_eq!(
+            original
+                .streak
+                .map(|streak| Into::<transparent::CharacterStreak>::into(streak)),
+            transparent.streak
         );
     }
 }

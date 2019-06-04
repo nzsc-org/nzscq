@@ -1,6 +1,7 @@
 pub mod choices;
 pub mod game;
 pub mod outcomes;
+pub mod scoreboard;
 
 pub mod prelude {
     pub use crate::{choices::*, game::*, outcomes::*};

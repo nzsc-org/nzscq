@@ -2,6 +2,7 @@ use super::dequeue_choiceless::DequeueChoicelessPlayer;
 use crate::choices::{ArsenalItem, Booster, Character, Choose};
 use crate::counters::Queue;
 use crate::game::Config;
+use crate::scoreboard::transparent;
 
 #[derive(Debug, Clone)]
 pub struct BoosterlessPlayer {
@@ -40,19 +41,32 @@ impl Choose<Booster> for BoosterlessPlayer {
     }
 }
 
+impl Into<transparent::BoosterlessPlayer> for BoosterlessPlayer {
+    fn into(self) -> transparent::BoosterlessPlayer {
+        transparent::BoosterlessPlayer {
+            points: self.points,
+            character: self.character,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::players::CharacterlessPlayer;
 
     fn ninja() -> BoosterlessPlayer {
+        use crate::outcomes::CharacterHeadstart;
+
         let player = CharacterlessPlayer::from_game_config(Config::default());
-        player.into_boosterless(Character::Ninja)
+        player.into_boosterless(CharacterHeadstart(Character::Ninja, 0))
     }
 
     fn samurai() -> BoosterlessPlayer {
+        use crate::outcomes::CharacterHeadstart;
+
         let player = CharacterlessPlayer::from_game_config(Config::default());
-        player.into_boosterless(Character::Samurai)
+        player.into_boosterless(CharacterHeadstart(Character::Samurai, 0))
     }
 
     #[test]
@@ -128,5 +142,14 @@ mod tests {
             Booster::Shadow,
             player.into_dequeue_choiceless(Booster::Shadow).booster
         );
+    }
+
+    #[test]
+    fn into_transparent_works() {
+        let original = ninja();
+        let transparent: transparent::BoosterlessPlayer = original.clone().into();
+
+        assert_eq!(original.points, transparent.points);
+        assert_eq!(original.character, transparent.character);
     }
 }

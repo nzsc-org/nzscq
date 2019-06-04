@@ -1,4 +1,4 @@
-use crate::choices::Character;
+use crate::{choices::Character, scoreboard::transparent};
 
 pub(crate) trait CharacterChoices {
     fn choices(&self, max_times: u8) -> Vec<Character>;
@@ -53,6 +53,15 @@ pub(crate) struct CharacterStreak {
     times: u8,
 }
 
+impl Into<transparent::CharacterStreak> for CharacterStreak {
+    fn into(self) -> transparent::CharacterStreak {
+        transparent::CharacterStreak {
+            character: self.character,
+            times: self.times,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -86,6 +95,17 @@ mod tests {
         no_ninja.retain(|c| c != &Character::Ninja);
         assert_eq!(streak.choices(MAX_TIMES), no_ninja);
         assert!(streak.choose(MAX_TIMES, Character::Ninja).is_err());
+    }
+
+    #[test]
+    fn into_transparent_works() {
+        let original = CharacterStreak {
+            times: 0,
+            character: Character::Ninja,
+        };
+        let transparent: transparent::CharacterStreak = original.clone().into();
+        assert_eq!(original.times, transparent.times);
+        assert_eq!(original.character, transparent.character);
     }
 
     const MAX_TIMES: u8 = 3;
