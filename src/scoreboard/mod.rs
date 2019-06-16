@@ -1,7 +1,7 @@
 pub(crate) mod transparent;
 pub use transparent::*;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Scoreboard {
     Characterless(Vec<CharacterlessPlayer>),
     Boosterless(Vec<BoosterlessPlayer>),
