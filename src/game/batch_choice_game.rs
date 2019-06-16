@@ -34,6 +34,10 @@ impl BatchChoiceGame {
         players
     }
 
+    pub fn config(&self) -> &Config {
+        &self.config
+    }
+
     pub fn choices(&self) -> BatchChoices {
         match &self.phase {
             Phase::Character(players) => {
@@ -255,6 +259,13 @@ mod tests {
             config.player_count as usize,
             BatchChoiceGame::initial_players(&config).len()
         );
+    }
+
+    #[test]
+    fn config_works() {
+        let config = Config::default();
+        let game = BatchChoiceGame::new(config.clone());
+        assert_eq!(config, *game.config());
     }
 
     #[test]
