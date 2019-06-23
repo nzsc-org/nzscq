@@ -55,7 +55,7 @@ impl ActionlessPlayer {
     }
 
     fn use_action(&mut self, action: Action, action_destroyed: bool) {
-        let arsenal_item = action.into_opt_arsenal_item();
+        let arsenal_item: Option<ArsenalItem> = action.into();
         if let Some(arsenal_item) = &arsenal_item {
             self.arsenal.retain(|m| m != arsenal_item);
         }

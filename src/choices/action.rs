@@ -17,40 +17,48 @@ impl Action {
             .collect()
     }
 
-    pub(crate) fn into_opt_arsenal_item(self) -> Option<ArsenalItem> {
+    fn is_destructive(self) -> bool {
+        let opt_move: Option<Move> = self.into();
+
+        opt_move.map(|m| m.is_destructive()).unwrap_or(false)
+    }
+
+    fn is_single_use(self) -> bool {
+        let opt_move: Option<Move> = self.into();
+
+        opt_move.map(|m| m.is_single_use()).unwrap_or(false)
+    }
+}
+
+impl PointsAgainst for Action {
+    fn points_against(&self, other: &Action) -> u8 {
+        let own_move: Option<Move> = (*self).into();
+        let other_move: Option<Move> = (*other).into();
+        match (own_move, other_move) {
+            (Some(own), Some(other)) => own.points_against(&other),
+            (Some(_own), None) => 1,
+            (None, Some(_other)) => 0,
+            (None, None) => 0,
+        }
+    }
+}
+
+impl Into<Option<ArsenalItem>> for Action {
+    fn into(self) -> Option<ArsenalItem> {
         match self {
             Action::Mirror(_) => Some(ArsenalItem::Mirror),
             Action::Move(m) => Some(ArsenalItem::Move(m)),
             Action::Concede => None,
         }
     }
+}
 
-    fn move_(self) -> Option<Move> {
+impl Into<Option<Move>> for Action {
+    fn into(self) -> Option<Move> {
         match self {
             Action::Mirror(m) => Some(m),
             Action::Move(m) => Some(m),
             Action::Concede => None,
-        }
-    }
-
-    fn is_destructive(self) -> bool {
-        self.move_().map(|m| m.is_destructive()).unwrap_or(false)
-    }
-
-    fn is_single_use(self) -> bool {
-        self.move_().map(|m| m.is_single_use()).unwrap_or(false)
-    }
-}
-
-impl PointsAgainst for Action {
-    fn points_against(&self, other: &Action) -> u8 {
-        let own_move = self.move_();
-        let other_move = other.move_();
-        match (own_move, other_move) {
-            (Some(own), Some(other)) => own.points_against(&other),
-            (Some(_own), None) => 1,
-            (None, Some(_other)) => 0,
-            (None, None) => 0,
         }
     }
 }
