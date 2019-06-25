@@ -204,7 +204,10 @@ impl BatchChoiceGame {
                         .map(|(player, apd)| player.into_finished(apd))
                         .collect();
                     self.phase = Phase::Final(finished_players.clone());
-                    Ok(Outcome::GameOver(finished_players))
+
+                    Ok(Outcome::GameOver(
+                        finished_players.into_iter().map(|p| p.into()).collect(),
+                    ))
                 } else {
                     let dummy = vec![];
                     let players = mem::replace(players, dummy);

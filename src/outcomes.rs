@@ -1,6 +1,6 @@
 use crate::{
     choices::{Action, Booster, Character, DequeueChoice},
-    players::FinishedPlayer,
+    scoreboard::transparent::FinishedPlayer,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
