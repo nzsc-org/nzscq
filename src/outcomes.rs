@@ -1,6 +1,5 @@
 use crate::{
     choices::{Action, Booster, Character, DequeueChoice},
-    scoreboard::transparent::FinishedPlayer,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -10,7 +9,7 @@ pub enum Outcome {
     BoosterPhaseDone(Vec<Booster>),
     DequeuePhaseDone(Vec<DequeueChoice>),
     ActionPhaseDone(Vec<ActionPointsDestroyed>),
-    GameOver(Vec<FinishedPlayer>),
+    GameOver(Vec<ActionPointsDestroyed>),
 }
 
 impl Outcome {
@@ -54,9 +53,9 @@ impl Outcome {
         }
     }
 
-    pub fn game_over(self) -> Option<Vec<FinishedPlayer>> {
-        if let Outcome::GameOver(fp) = self {
-            Some(fp)
+    pub fn game_over(self) -> Option<Vec<ActionPointsDestroyed>> {
+        if let Outcome::GameOver(apd) = self {
+            Some(apd)
         } else {
             None
         }
