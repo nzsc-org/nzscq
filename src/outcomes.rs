@@ -1,8 +1,6 @@
-use crate::{
-    choices::{Action, Booster, Character, DequeueChoice},
-};
+use crate::choices::{Action, Booster, Character, DequeueChoice};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Outcome {
     CharacterPhaseDone(Vec<CharacterHeadstart>),
     CharacterPhaseRechoose(Vec<Character>),
@@ -62,10 +60,10 @@ impl Outcome {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CharacterHeadstart(pub Character, pub u8);
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ActionPointsDestroyed(pub Action, pub i8, pub bool);
 
 #[cfg(test)]

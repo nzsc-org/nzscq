@@ -12,7 +12,7 @@ use crate::{
 
 use std::mem;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BatchChoiceGame {
     config: Config,
     phase: Phase,

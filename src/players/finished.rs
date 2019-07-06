@@ -3,7 +3,7 @@ use crate::counters::Queue;
 use crate::game::Config;
 use crate::scoreboard::transparent;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FinishedPlayer {
     pub(super) game_config: Config,
     pub(crate) points: u8,

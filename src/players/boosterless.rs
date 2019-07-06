@@ -4,7 +4,7 @@ use crate::counters::Queue;
 use crate::game::Config;
 use crate::scoreboard::transparent;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BoosterlessPlayer {
     pub(super) game_config: Config,
     pub(super) points: u8,

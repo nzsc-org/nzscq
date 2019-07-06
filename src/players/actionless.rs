@@ -5,7 +5,7 @@ use crate::game::Config;
 use crate::outcomes::ActionPointsDestroyed;
 use crate::scoreboard::transparent;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ActionlessPlayer {
     pub(super) game_config: Config,
     pub(super) points: u8,

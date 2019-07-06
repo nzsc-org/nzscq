@@ -1,6 +1,6 @@
 use super::{Action, Booster, Character, DequeueChoice};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BatchChoice {
     Characters(Vec<Character>),
     Boosters(Vec<Booster>),
@@ -28,7 +28,7 @@ impl BatchChoice {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BatchChoices {
     Characters(Vec<Vec<Character>>),
     Boosters(Vec<Vec<Booster>>),

@@ -6,7 +6,7 @@ use crate::{
     scoreboard::Scoreboard,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(super) enum Phase {
     Character(Vec<CharacterlessPlayer>),
     Booster(Vec<BoosterlessPlayer>),

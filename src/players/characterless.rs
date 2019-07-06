@@ -5,7 +5,7 @@ use crate::game::Config;
 use crate::outcomes::CharacterHeadstart;
 use crate::scoreboard::transparent;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CharacterlessPlayer {
     game_config: Config,
     streak: Option<CharacterStreak>,

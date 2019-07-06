@@ -47,7 +47,7 @@ impl CharacterChoices for Option<CharacterStreak> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct CharacterStreak {
     character: Character,
     times: u8,

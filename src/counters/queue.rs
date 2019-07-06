@@ -3,9 +3,11 @@ use crate::{
     scoreboard::transparent,
 };
 
-use std::collections::HashMap;
+use std::cmp::Ordering;
+use std::collections::BTreeMap;
+use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Queue {
     entrance: Option<ArsenalItem>,
     pool: Pool,
@@ -77,10 +79,10 @@ struct Pool {
 }
 
 impl Pool {
-    fn hash_map(&self) -> HashMap<&ArsenalItem, usize> {
-        let mut map: HashMap<&ArsenalItem, usize> = HashMap::new();
-        for item in self.items.iter() {
-            *map.entry(item).or_insert(0) += 1;
+    fn btree_map(&self) -> BTreeMap<OrderedArsenalItem, usize> {
+        let mut map: BTreeMap<OrderedArsenalItem, usize> = BTreeMap::new();
+        for &item in &self.items {
+            *map.entry(OrderedArsenalItem(item)).or_insert(0) += 1;
         }
         map
     }
@@ -88,11 +90,41 @@ impl Pool {
 
 impl PartialEq for Pool {
     fn eq(&self, other: &Pool) -> bool {
-        self.hash_map() == other.hash_map()
+        self.btree_map() == other.btree_map()
     }
 }
 
 impl Eq for Pool {}
+
+impl Hash for Pool {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.btree_map().hash(state);
+    }
+}
+
+#[derive(PartialEq, Eq, Hash)]
+struct OrderedArsenalItem(ArsenalItem);
+
+impl PartialOrd for OrderedArsenalItem {
+    fn partial_cmp(&self, other: &OrderedArsenalItem) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for OrderedArsenalItem {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let self_score = match self.0 {
+            ArsenalItem::Mirror => -1,
+            ArsenalItem::Move(m) => m as i8,
+        };
+        let other_score = match other.0 {
+            ArsenalItem::Mirror => -1,
+            ArsenalItem::Move(m) => m as i8,
+        };
+
+        self_score.cmp(&other_score)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -294,5 +326,47 @@ mod tests {
         assert_eq!(original.entrance, transparent.entrance);
         assert_eq!(original.pool.items, transparent.pool);
         assert_eq!(original.exit, transparent.exit);
+    }
+
+    #[test]
+    fn mirror_is_less_than_any_move() {
+        let left = OrderedArsenalItem(ArsenalItem::Mirror);
+        let right = OrderedArsenalItem(ArsenalItem::Move(Move::Kick));
+        assert_eq!(Ordering::Less, left.cmp(&right));
+    }
+
+    #[test]
+    fn mirror_equals_mirror() {
+        let left = OrderedArsenalItem(ArsenalItem::Mirror);
+        let right = OrderedArsenalItem(ArsenalItem::Mirror);
+        assert_eq!(Ordering::Equal, left.cmp(&right));
+    }
+
+    #[test]
+    fn any_move_is_greater_than_mirror() {
+        let left = OrderedArsenalItem(ArsenalItem::Move(Move::Kick));
+        let right = OrderedArsenalItem(ArsenalItem::Mirror);
+        assert_eq!(Ordering::Greater, left.cmp(&right));
+    }
+
+    #[test]
+    fn kick_is_less_than_ninja_sword() {
+        let left = OrderedArsenalItem(ArsenalItem::Move(Move::Kick));
+        let right = OrderedArsenalItem(ArsenalItem::Move(Move::NinjaSword));
+        assert_eq!(Ordering::Less, left.cmp(&right));
+    }
+
+    #[test]
+    fn kick_equals_kick() {
+        let left = OrderedArsenalItem(ArsenalItem::Move(Move::Kick));
+        let right = OrderedArsenalItem(ArsenalItem::Move(Move::Kick));
+        assert_eq!(Ordering::Equal, left.cmp(&right));
+    }
+
+    #[test]
+    fn ninja_sword_is_greater_than_kick() {
+        let left = OrderedArsenalItem(ArsenalItem::Move(Move::NinjaSword));
+        let right = OrderedArsenalItem(ArsenalItem::Move(Move::Kick));
+        assert_eq!(Ordering::Greater, left.cmp(&right));
     }
 }
